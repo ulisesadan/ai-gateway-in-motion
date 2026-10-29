@@ -106,7 +106,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let currentIndex = null;
 
 const number = index => String(index + 1).padStart(2, '0');
-const asset = (scene, index) => `Scenes/${number(index)}-${scene.id}.gif`;
+const asset = (scene, index) => `Scenes/slower-gifs/${number(index)}-${scene.id}.gif`;
 nav.innerHTML = '<a class="scene-link" href="#high-level-understanding"><span class="scene-number">00</span><span>High-level understanding</span><span class="nav-active" aria-hidden="true"></span></a>' + scenes.map((scene, index) => `<a class="scene-link" href="#${scene.id}"><span class="scene-number">${number(index)}</span><span>${scene.nav}</span><span class="nav-active" aria-hidden="true"></span></a>`).join('');
 nav.insertAdjacentHTML('beforeend', '<a class="scene-link" href="#customer-questions"><span class="scene-number">10</span><span>Customer questions</span><span class="nav-active" aria-hidden="true"></span></a>');
 nav.insertAdjacentHTML('beforeend', '<a class="scene-link" href="#azure-architecture"><span class="scene-number">11</span><span>Azure architecture</span><span class="nav-active" aria-hidden="true"></span></a>');
