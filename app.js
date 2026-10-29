@@ -238,16 +238,46 @@ function renderAzureArchitecture() {
       <aside class="consideration"><span aria-hidden="true">i</span><p><strong>Reference design, not a live deployment.</strong> This sample combines documented Azure networking and authentication patterns. It assumes one region, one approved model, an existing corporate network connection, and no document retrieval. Resource names are examples. Validate the design, regional support, capacity, and commercial terms before implementation.</p></aside>
       <section class="overview-section"><h2>The application-to-model path</h2><p>An employee asks the assistant to summarize synthetic meeting notes. The browser never receives a model key and never calls the model directly.</p>
         <figure class="deployment-topology" aria-label="Private employee assistant deployment and request path">
-          <div class="topology-band"><strong>Microsoft Entra ID</strong><span>Employee sign-in · application-to-gateway authorization · gateway-to-model managed identity</span></div>
-          <div class="topology-client"><strong>01 · Employee browser</strong><span>Corporate network → existing VPN / ExpressRoute → private application endpoint</span></div>
-          <div class="topology-boundary"><h3>Azure workload · one subscription / one region</h3><div class="topology-path">
-            <section><span class="topology-step">02 · APPLICATION</span><h3>Azure App Service</h3><p>Employee UI + backend<br>Inbound app private endpoint<br>Outbound VNet integration</p><code>app-ai-assistant</code></section>
-            <span class="topology-connector">HTTPS →<small>APIM private endpoint</small></span>
-            <section class="topology-gateway"><span class="topology-step">03 · AI GATEWAY</span><h3>API Management</h3><p>Standard v2 · managed identity<br>Caller validation + token limits<br>Outbound VNet integration</p><code>apim-ai-gateway</code></section>
-            <span class="topology-connector">HTTPS →<small>Model private endpoint</small></span>
-            <section><span class="topology-step">04 · INFERENCE</span><h3>Azure OpenAI</h3><p>Approved model deployment<br>Model-side content filters<br>Public network access disabled</p><code>aoai-assistant</code></section>
-          </div><div class="topology-network"><strong>VNet: vnet-ai</strong><span>snet-app: application egress</span><span>snet-apim: dedicated gateway egress</span><span>snet-pe: app, APIM, and model private endpoints</span></div></div>
-          <div class="topology-band topology-telemetry"><strong>05 · Operations</strong><span>App + gateway telemetry → Application Insights / Log Analytics → Azure Monitor alerts</span></div>
+          <div class="animation-toolbar"><span class="animation-label">AZURE DEPLOYMENT DIAGRAM</span><button class="icon-button" id="expand-architecture" aria-label="Expand Azure architecture diagram" title="Expand Azure architecture diagram">${icons.expand}</button></div>
+          <div class="azure-diagram-scroll" tabindex="0" role="region" aria-label="Azure architecture diagram">
+            <svg class="azure-deployment-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850" role="img" aria-labelledby="azure-diagram-title azure-diagram-description">
+              <title id="azure-diagram-title">Private Azure AI Gateway architecture</title>
+              <desc id="azure-diagram-description">Employees connect over corporate VPN or ExpressRoute to private App Service. The application calls API Management Standard v2, which calls Azure OpenAI. Each service has a private endpoint. Separate App Service and APIM integration subnets provide outbound access. Entra ID supplies identity tokens; Application Insights and Log Analytics receive telemetry. Managed services are outside the VNet subnet boundary.</desc>
+              <defs><marker id="azure-request-arrow" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#17664f"/></marker><marker id="azure-network-arrow" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#287baa"/></marker></defs>
+              <rect width="1200" height="850" fill="#fff"/>
+              <rect x="250" y="18" width="925" height="90" rx="4" fill="#f2f7fc" stroke="#9abbd6"/>
+              <image href="assets/azure-icons/Azure-Active-Directory.svg" x="272" y="38" width="46" height="46"/>
+              <text x="335" y="51" class="diagram-title">Microsoft Entra ID</text><text x="335" y="77">Employee sign-in · app identity → gateway API · gateway identity → model</text>
+              <path d="M405 108V205M720 108V205M1030 108V205" class="diagram-identity"/>
+              <rect x="250" y="155" width="925" height="295" rx="4" fill="#fafcfb" stroke="#a5b8af"/>
+              <text x="270" y="183" class="diagram-label">AZURE MANAGED SERVICES · ONE SUBSCRIPTION / ONE REGION</text>
+              <rect x="18" y="225" width="182" height="175" rx="4" fill="#f6f7f8" stroke="#a8b3b9"/>
+              <text x="36" y="259" class="diagram-title">01 · Employees</text><text x="36" y="289">Corporate browser</text><text x="36" y="320">Existing VPN or</text><text x="36" y="341">ExpressRoute + DNS</text><text x="36" y="376" class="diagram-small">Private application access</text>
+              <rect x="275" y="215" width="245" height="205" rx="4" fill="#fff" stroke="#9abbd6"/>
+              <image href="assets/azure-icons/App-Services.svg" x="295" y="232" width="44" height="44"/>
+              <text x="350" y="251" class="diagram-label">02 · APPLICATION</text><text x="295" y="303" class="diagram-title">Azure App Service</text><text x="295" y="331">Employee UI + backend</text><text x="295" y="357">Managed application identity</text><text x="295" y="397" class="diagram-small">app-ai-assistant</text>
+              <rect x="600" y="215" width="245" height="205" rx="4" fill="#f0f8f3" stroke="#17664f" stroke-width="2"/>
+              <image href="assets/azure-icons/API-Management-Services.svg" x="620" y="232" width="44" height="44"/>
+              <text x="675" y="251" class="diagram-label">03 · AI GATEWAY</text><text x="620" y="303" class="diagram-title">API Management</text><text x="620" y="331">Standard v2 · managed identity</text><text x="620" y="357">Validate caller · limit tokens</text><text x="620" y="397" class="diagram-small">apim-ai-gateway</text>
+              <rect x="925" y="215" width="225" height="205" rx="4" fill="#fff" stroke="#9abbd6"/>
+              <image href="assets/azure-icons/Cognitive-Services.svg" x="945" y="232" width="44" height="44"/>
+              <text x="1000" y="251" class="diagram-label">04 · MODEL</text><text x="945" y="303" class="diagram-title">Azure OpenAI</text><text x="945" y="331">Approved model deployment</text><text x="945" y="357">Model-side content filters</text><text x="945" y="397" class="diagram-small">aoai-assistant</text>
+              <path d="M200 307H275" class="diagram-request"/><path d="M520 307H600" class="diagram-request"/><path d="M845 307H925" class="diagram-request"/>
+              <text x="211" y="285" class="diagram-link">HTTPS</text><text x="534" y="285" class="diagram-link">HTTPS</text><text x="859" y="285" class="diagram-link">HTTPS</text>
+              <text x="211" y="338" class="diagram-link">App PE</text><text x="531" y="338" class="diagram-link">APIM PE</text><text x="851" y="338" class="diagram-link">Model PE</text>
+              <rect x="250" y="505" width="925" height="183" rx="4" fill="#f2f8fc" stroke="#287baa" stroke-dasharray="7 4"/>
+              <image href="assets/azure-icons/Virtual-Networks.svg" x="270" y="518" width="32" height="32"/><text x="314" y="540" class="diagram-label">VNET: vnet-ai · PRIVATE IP CONNECTIVITY</text>
+              <rect x="275" y="566" width="245" height="97" rx="3" fill="#fff" stroke="#9abbd6"/><text x="291" y="592" class="diagram-title">snet-app</text><text x="291" y="616">App Service integration subnet</text><text x="291" y="640" class="diagram-small">Dedicated application egress</text>
+              <rect x="600" y="566" width="245" height="97" rx="3" fill="#fff" stroke="#9abbd6"/><text x="616" y="592" class="diagram-title">snet-apim</text><text x="616" y="616">APIM integration subnet</text><text x="616" y="640" class="diagram-small">Dedicated · /27 min, /24 preferred</text>
+              <rect x="925" y="566" width="225" height="97" rx="3" fill="#fff" stroke="#9abbd6"/><text x="941" y="592" class="diagram-title">snet-pe</text><text x="941" y="616">3 private endpoints (PE)</text><text x="941" y="640" class="diagram-small">App · APIM gateway · model</text>
+              <path d="M397 420V566" class="diagram-network"/><path d="M722 420V566" class="diagram-network"/><path d="M1037 420V566" class="diagram-network"/>
+              <rect x="302" y="462" width="190" height="25" fill="#fff"/><text x="311" y="479" class="diagram-small">Outbound VNet integration</text><rect x="627" y="462" width="190" height="25" fill="#fff"/><text x="636" y="479" class="diagram-small">Outbound VNet integration</text><rect x="966" y="462" width="147" height="25" fill="#fff"/><text x="975" y="479" class="diagram-small">Private Link endpoint</text>
+              <text x="270" y="718" class="diagram-small">Private DNS + corporate forwarding resolve service hostnames to PE addresses. Public request access disabled.</text>
+              <rect x="250" y="746" width="925" height="82" rx="4" fill="#fcf9ef" stroke="#c6b46e"/>
+              <image href="assets/azure-icons/Application-Insights.svg" x="272" y="763" width="44" height="44"/><text x="333" y="777" class="diagram-title">05 · Application Insights + Log Analytics + Azure Monitor</text><text x="333" y="802">App + gateway diagnostics → correlated requests, token metrics, alerts (separate telemetry path)</text>
+              <path d="M24 485H64" class="diagram-request"/><text x="24" y="511" class="diagram-small">HTTPS request</text><path d="M24 550H64" class="diagram-identity"/><text x="24" y="576" class="diagram-small">Identity / tokens</text><path d="M24 615H64" class="diagram-network"/><text x="24" y="641" class="diagram-small">Network attachment</text>
+            </svg>
+          </div>
           <figcaption class="overview-source">Arrows show the HTTPS request direction; responses return along the same path. App Service, APIM, and Azure OpenAI are managed services, not VMs placed in these subnets. Integration subnets provide outbound access; private endpoints provide inbound private IPs. Telemetry connectivity and service dependencies require separate configuration.</figcaption>
         </figure>
       </section>
@@ -311,6 +341,16 @@ function render() {
     document.title = 'Azure architecture | Azure AI Gateway';
     document.querySelector('#breadcrumb-scene').textContent = 'Reference architecture';
     main.innerHTML = renderAzureArchitecture();
+    document.querySelector('#expand-architecture').addEventListener('click', () => {
+      const diagram = document.querySelector('.azure-deployment-diagram').cloneNode(true);
+      diagram.removeAttribute('aria-labelledby');
+      diagram.setAttribute('aria-label', 'Private Azure AI Gateway architecture');
+      diagram.querySelectorAll('[id]').forEach(node => { node.id = `expanded-${node.id}`; });
+      diagram.querySelectorAll('[marker-end]').forEach(node => { node.setAttribute('marker-end', node.getAttribute('marker-end').replace('#azure-', '#expanded-azure-')); });
+      document.querySelector('#dialog-title').textContent = 'Azure architecture diagram';
+      document.querySelector('#expanded-animation').replaceChildren(diagram);
+      dialog.showModal();
+    });
     finishNavigation(initial);
     return;
   }
