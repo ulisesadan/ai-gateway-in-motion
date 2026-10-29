@@ -1,0 +1,238 @@
+const scenes = [
+  {
+    id: 'centralized-ai-access', title: 'Centralized AI access & governance', nav: 'Centralized AI access', category: 'Visibility & governance',
+    subtitle: 'One governed front door between every AI consumer and every approved model, agent, and tool.',
+    does: 'Gives every channel a single entry point with consistent gateway policies. Azure API Management calls the models using managed identity.',
+    matters: 'Web, mobile, internal applications, and employees use the same controls instead of calling model endpoints directly. Teams no longer need to duplicate governance in every application.',
+    tech: ['APIM as AI gateway', 'Managed identity', 'Private endpoints', 'Entra ID-only model authentication'],
+    note: 'Blocking direct model access requires network and authentication settings on the model resources. APIM alone does not prevent bypass.',
+    flow: ['Web / mobile / internal apps', 'AI Gateway', 'Managed identity', 'Approved models'], slide: 5,
+    alt: 'Animated isometric diagram of multiple application channels accessing approved AI models through a central API Management gateway.'
+  },
+  {
+    id: 'authentication-authorization', title: 'Authentication & access control', nav: 'Authentication & access', category: 'Security & safety',
+    subtitle: 'Verify who is calling before a request ever reaches the model.',
+    does: 'Validates Microsoft Entra ID tokens on every call, checking the issuer, audience, and role claims against the API\'s access requirements.',
+    matters: 'Expired or invalid tokens receive a 401 before reaching the model. Model API keys do not live in client applications; the gateway uses managed identity for backend access.',
+    tech: ['validate-azure-ad-token', 'validate-jwt', 'Microsoft Entra ID', 'Managed identity'],
+    note: 'This is an illustrative scenario. Configure roles, audiences, and application registrations for each application in Microsoft Entra ID. Authorization failures may return 403.',
+    flow: ['Application + Entra token', 'Validate identity & claims', 'Allow or reject', 'Model'], slide: 6,
+    alt: 'Animated isometric scene showing identity validation at the AI gateway, with authorized calls passing and invalid credentials rejected.'
+  },
+  {
+    id: 'rate-limiting-quotas', title: 'Rate limiting & token quotas', nav: 'Rate limiting & quotas', category: 'Scale & resilience',
+    subtitle: 'Share model capacity fairly, even when one application gets busy.',
+    does: 'Enforces tokens-per-minute limits and optional token quotas per application or subscription through a centrally managed policy.',
+    matters: 'One application\'s spike cannot consume the entire shared provisioned throughput (PTU) allocation. Requests over the configured limit receive 429 with Retry-After.',
+    tech: ['llm-token-limit', 'APIM products', 'APIM subscriptions', 'Azure OpenAI PTU / Standard'],
+    note: 'Token limits in the animation are illustrative. Set actual limits per application and environment during design, and make sure clients respect Retry-After.',
+    flow: ['Application request', 'Check token allowance', 'Within limit: model', 'Over limit: 429'], slide: 7,
+    alt: 'Animated isometric scene illustrating per-application token allowances and rejection of requests that exceed the configured quota.'
+  },
+  {
+    id: 'model-routing-fallback', title: 'Model routing & fallback', nav: 'Model routing & fallback', category: 'Scale & resilience',
+    subtitle: 'Keep applications connected when the primary model backend is under pressure.',
+    does: 'Routes calls through a priority-based backend pool: a PTU primary and a Standard secondary deployment in another region.',
+    matters: 'When configured 429 or error thresholds are reached, a circuit breaker opens and the retry policy can send requests to the secondary. Applications keep the same gateway endpoint.',
+    tech: ['APIM backend pools', 'Priority-based routing', 'Circuit breaker', 'retry policy'],
+    note: 'Regions, deployments, and circuit-breaker thresholds are illustrative. Configure the pool, retry conditions, and backend compatibility explicitly; fallback is not automatic without these controls.',
+    flow: ['AI Gateway', 'PTU primary', 'Error / open circuit', 'Retry: Standard secondary'], slide: 8,
+    alt: 'Animated isometric diagram of a primary provisioned-throughput model and a secondary regional model receiving fallback traffic.'
+  },
+  {
+    id: 'prompt-content-validation', title: 'Prompt & content validation', nav: 'Prompt & content validation', category: 'Security & safety',
+    subtitle: 'Apply a consistent safety checkpoint before prompts reach your models.',
+    does: 'Screens prompts, and optionally responses, with Azure AI Content Safety using harm categories, Prompt Shields, and custom blocklists.',
+    matters: 'In this scenario, flagged jailbreak or prompt-injection attempts receive a 403 at the gateway, preventing the rejected prompt from reaching the model.',
+    tech: ['llm-content-safety', 'Azure AI Content Safety', 'Prompt Shields', 'Custom blocklists'],
+    note: 'Configure harm categories, severity thresholds, and blocklists per API. Gateway screening complements model content filters and application controls; it cannot detect every unsafe request.',
+    flow: ['Incoming prompt', 'Content Safety screening', 'Allow or block (403)', 'Model'], slide: 9,
+    alt: 'Animated isometric safety checkpoint screening prompts and blocking flagged content before it reaches an AI model.'
+  },
+  {
+    id: 'sensitive-data-protection', title: 'Sensitive data protection', nav: 'Sensitive data protection', category: 'Security & safety',
+    subtitle: 'Reduce exposure of personal information before a prompt leaves the gateway.',
+    does: 'A custom policy calls Azure AI Language for personally identifiable information (PII) detection, then masks detected entities with placeholders such as [PERSON] and [PHONE].',
+    matters: 'Personal data is masked before the request reaches the model. In this pattern, logging is also configured to retain only redacted text.',
+    tech: ['Custom policy pattern', 'send-request', 'set-body', 'Azure AI Language PII detection'],
+    note: 'PII masking is a custom integration, not a built-in APIM policy. Detection coverage and redacted logging must be validated. This complements DLP, data classification, and application-level controls.',
+    flow: ['Prompt with personal data', 'Detect PII', 'Replace with placeholders', 'Model / redacted logs'], slide: 10,
+    alt: 'Animated isometric scene showing personal information detected and replaced with placeholders before a prompt reaches the model.'
+  },
+  {
+    id: 'semantic-caching', title: 'Semantic caching & latency', nav: 'Semantic caching', category: 'Scale & resilience',
+    subtitle: 'Answer similar questions faster without repeating the model completion.',
+    does: 'Creates an embedding of the prompt and looks for similar prompts in Azure Managed Redis. A cache hit returns the previously stored answer; a miss continues to the model and can populate the cache.',
+    matters: 'Repeat questions receive faster answers and cache hits avoid model completion tokens. The presentation illustrates approximately 0.3 seconds for a hit versus 2.4 seconds for a model response.',
+    tech: ['llm-semantic-cache-lookup', 'llm-semantic-cache-store', 'Azure Managed Redis (RediSearch)', 'Embeddings deployment'],
+    note: 'The latencies and 0.95 similarity threshold are illustrative, not guarantees. Scope cache keys so personalized answers are never shared across users or tenants. Embedding and cache operations still have costs.',
+    flow: ['Prompt embedding', 'Similarity lookup', 'Hit: cached answer', 'Miss: model + store'], slide: 11,
+    alt: 'Animated isometric diagram comparing a fast semantic cache hit with a slower model request for a cache miss.'
+  },
+  {
+    id: 'token-cost-governance', title: 'Token consumption & cost governance', nav: 'Token & cost governance', category: 'Visibility & governance',
+    subtitle: 'Make AI consumption visible to the teams accountable for it.',
+    does: 'Emits prompt, completion, and total token metrics with dimensions for channels, applications, APIs, and subscriptions.',
+    matters: 'FinOps teams can build dashboards, budgets, alerts, and chargeback views by business line, replacing opaque shared consumption with an attributable usage picture.',
+    tech: ['llm-emit-token-metric', 'Application Insights', 'Azure Monitor alerts', 'Azure Monitor workbooks'],
+    note: 'All figures, including the 80% budget alert, are illustrative and the scenario is fictional. Token metrics support cost attribution; they are not themselves a billing ledger or a hard spending cap.',
+    flow: ['Model interaction', 'Emit token metrics', 'Attribute by channel / app', 'Dashboards & alerts'], slide: 12,
+    alt: 'Animated isometric scene showing token usage attributed to business channels and feeding cost dashboards and budget alerts.'
+  },
+  {
+    id: 'monitoring-auditability', title: 'Monitoring, observability & audit', nav: 'Monitoring & auditability', category: 'Visibility & governance',
+    subtitle: 'Turn AI traffic into traceable evidence for operations, risk, and audit.',
+    does: 'Sends latency, errors, policy outcomes, and optional prompt and completion logs to the configured Application Insights and Log Analytics destinations.',
+    matters: 'A traceable record of gateway interactions helps operations investigate failures and gives risk and audit teams evidence of how the configured controls behaved.',
+    tech: ['APIM diagnostic settings', 'Gateway + LLM logs', 'Application Insights', 'Log Analytics', 'Azure Monitor alerts'],
+    note: 'Prompt and completion logging is optional. Configure redaction, access controls, sampling, and retention in line with Inbursa\'s privacy and data-retention policies. Logs alone do not guarantee compliance.',
+    flow: ['Gateway interaction', 'Metrics & diagnostic logs', 'Log Analytics', 'Operations / risk / audit'], slide: 13,
+    alt: 'Animated isometric scene of AI gateway telemetry flowing into monitoring dashboards and traceable audit records.'
+  }
+];
+
+const icons = {
+  pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 4v16M15 4v16"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 4 12 8-12 8Z"/></svg>',
+  expand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>'
+};
+const main = document.querySelector('main');
+const nav = document.querySelector('#scene-nav');
+const menu = document.querySelector('#menu-toggle');
+const sidebar = document.querySelector('#sidebar');
+const backdrop = document.querySelector('#nav-backdrop');
+const dialog = document.querySelector('#animation-dialog');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let currentIndex = -1;
+
+const number = index => String(index + 1).padStart(2, '0');
+const asset = (scene, index) => `Scenes/${number(index)}-${scene.id}.gif`;
+nav.innerHTML = scenes.map((scene, index) => `<a class="scene-link" href="#${scene.id}"><span class="scene-number">${number(index)}</span><span>${scene.nav}</span><span class="nav-active" aria-hidden="true"></span></a>`).join('');
+
+function setMenu(open) {
+  sidebar.classList.toggle('is-open', open);
+  menu.setAttribute('aria-expanded', String(open));
+  menu.setAttribute('aria-label', `${open ? 'Close' : 'Open'} scene navigation`);
+  backdrop.hidden = !open;
+  if (matchMedia('(max-width: 760px)').matches) sidebar.inert = !open;
+}
+
+function pageLink(index, next) {
+  if (index < 0 || index >= scenes.length) return '<span></span>';
+  const scene = scenes[index];
+  return `<a class="page-link ${next ? 'next' : ''}" href="#${scene.id}">${next ? '' : '<span aria-hidden="true">←</span>'}<span><small>${next ? 'NEXT' : 'PREVIOUS'} SCENE / ${number(index)}</small>${scene.nav}</span>${next ? '<span aria-hidden="true">→</span>' : ''}</a>`;
+}
+
+function render() {
+  const id = location.hash.slice(1);
+  let index = scenes.findIndex(scene => scene.id === id);
+  if (index === -1) {
+    index = 0;
+    history.replaceState(null, '', `#${scenes[0].id}`);
+  }
+  if (index === currentIndex) return;
+  const initial = currentIndex === -1;
+  currentIndex = index;
+  const scene = scenes[index];
+  document.title = `${scene.nav} | Azure AI Gateway`;
+  document.querySelector('#breadcrumb-scene').textContent = `Scene ${number(index)}`;
+  [...nav.children].forEach((link, navIndex) => {
+    if (navIndex === index) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+    link.querySelector('.nav-active').textContent = navIndex === index ? '›' : '';
+  });
+  main.innerHTML = `
+    <article aria-labelledby="scene-title">
+      <div class="scene-heading"><span class="eyebrow">${scene.category}</span><span class="scene-count">SCENE ${number(index)} <span aria-hidden="true">/</span> 09</span></div>
+      <h1 id="scene-title">${scene.title}</h1>
+      <p class="intro">${scene.subtitle}</p>
+      <figure style="margin:0">
+        <div class="animation-region">
+          <div class="animation-toolbar"><span class="animation-label"><span class="status-dot"></span>SCENE ${number(index)} / ANIMATED ARCHITECTURE</span><div class="tools"><button class="icon-button" id="toggle-animation" aria-label="Pause animation" title="Pause animation" aria-pressed="false">${icons.pause}</button><button class="icon-button" id="expand-animation" aria-label="Expand animation" title="Expand animation">${icons.expand}</button></div></div>
+          <div class="animation-stage"><img id="scene-image" src="${asset(scene, index)}" alt="${scene.alt}" width="1280" height="720" decoding="async"><canvas id="scene-still" width="1280" height="720" role="img" aria-label="${scene.alt} Paused." hidden></canvas><div class="image-error" hidden><p>The animation could not be loaded.</p><a href="${asset(scene, index)}">Open scene GIF</a></div></div>
+        </div>
+        <figcaption class="figure-caption"><span>Isometric architecture scene</span><span>CAPABILITY ${number(index)} / SLIDE ${scene.slide}</span></figcaption>
+      </figure>
+      <div class="details-grid"><section><h2 class="section-label">What it does</h2><p>${scene.does}</p></section><section><h2 class="section-label">Why it matters for Inbursa</h2><p>${scene.matters}</p></section></div>
+      <section class="implementation"><h2 class="section-label">Enabled by</h2><div class="chips">${scene.tech.map(item => `<span class="chip">${item}</span>`).join('')}</div></section>
+      <aside class="consideration"><span aria-hidden="true">i</span><p><strong>Design consideration.</strong> ${scene.note}</p></aside>
+      <section class="flow-section"><h2 class="section-label">Scenario at a glance</h2><div class="flow">${scene.flow.map((step, stepIndex) => `${stepIndex ? '<span class="flow-arrow" aria-hidden="true">→</span>' : ''}<span class="flow-step ${stepIndex === 1 ? 'highlight' : ''}">${step}</span>`).join('')}</div></section>
+      <details class="context-section"><summary>The bigger picture: one ordered policy pipeline</summary><div class="context-body"><p>The reference pipeline in slide 14 connects these capabilities into a single request and response path.</p><h3 class="section-label">Inbound</h3><div class="pipeline">Validate token → Content safety → PII masking (custom) → Token limit → Cache lookup → Route backend → Foundry model</div><h3 class="section-label">Outbound</h3><div class="pipeline">Cache store → Emit token metrics → Log & trace → Return to channel</div><p>This is the presentation's conceptual reference flow. Cache hits and blocked requests can short-circuit the model path; actual policy placement and execution must be validated for the API.</p></div></details>
+      <details class="context-section"><summary>Shared responsibility & adoption</summary><div class="context-body"><div class="context-columns"><section><h3>One layer in defense-in-depth</h3><p>The gateway centralizes policy enforcement, identity checks, configured screening, traffic controls, and audit evidence. It does not by itself guarantee CNBV or Banxico compliance, prevent every data leak, or replace identity management, DLP, model filters, and application security.</p></section><section><h3>A phased path to production</h3><ul><li>Weeks 0–6: gateway foundation, identity, token limits, metrics, and logging.</li><li>Weeks 6–12: content safety, backend resilience, and FAQ caching.</li><li>Week 12+: PII masking, chargeback, agents and MCP tools, and an operating model.</li></ul></section></div><p>Timings are indicative. Start with an architecture workshop, select 1–2 pilot use cases, agree quotas and KPIs, validate in non-production, then review results before rollout. Compliance depends on end-to-end controls and assessments.</p></div></details>
+      <details class="context-section"><summary>Source & further reading</summary><div class="context-body"><p>Adapted from <em>Inbursa - Azure AI Gateway (animated)</em>, Sebastian Adan, Sr. Cloud Solution Architect, Microsoft Mexico, October 2026. This scene corresponds to slide ${scene.slide}; shared context comes from slides 2–4 and 14–17. The scenarios and figures are illustrative, not evidence of a deployed Inbursa implementation.</p><div class="references"><a href="Inbursa%20-%20Azure%20AI%20Gateway%20(animated).pptx" download>Download the presentation ↗</a><a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener noreferrer">AI Gateway documentation ↗</a><a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener noreferrer">APIM policy reference ↗</a></div></div></details>
+      <nav class="scene-pagination" aria-label="Adjacent scenes">${pageLink(index - 1, false)}${pageLink(index + 1, true)}</nav>
+    </article>`;
+  const image = document.querySelector('#scene-image');
+  const still = document.querySelector('#scene-still');
+  const toggle = document.querySelector('#toggle-animation');
+  let paused = false;
+  const pause = () => {
+    if (!image.complete || !image.naturalWidth) return;
+    paused = !paused;
+    if (paused) still.getContext('2d').drawImage(image, 0, 0, 1280, 720);
+    image.hidden = paused;
+    still.hidden = !paused;
+    toggle.innerHTML = paused ? icons.play : icons.pause;
+    toggle.setAttribute('aria-label', `${paused ? 'Play' : 'Pause'} animation`);
+    toggle.title = `${paused ? 'Play' : 'Pause'} animation`;
+    toggle.setAttribute('aria-pressed', String(paused));
+  };
+  image.addEventListener('load', () => { if (reducedMotion.matches && !paused) pause(); });
+  if (image.complete && reducedMotion.matches) pause();
+  image.addEventListener('error', () => {
+    image.hidden = true;
+    document.querySelector('.image-error').hidden = false;
+    toggle.disabled = true;
+    document.querySelector('#expand-animation').disabled = true;
+  });
+  toggle.addEventListener('click', pause);
+  document.querySelector('#expand-animation').addEventListener('click', () => {
+    const expanded = document.querySelector('#expanded-animation');
+    expanded.replaceChildren();
+    document.querySelector('#dialog-title').textContent = scene.title;
+    if (paused) {
+      const copy = still.cloneNode();
+      copy.removeAttribute('id');
+      copy.getContext('2d').drawImage(still, 0, 0);
+      expanded.append(copy);
+    } else {
+      expanded.append(image.cloneNode());
+      expanded.firstChild.removeAttribute('id');
+    }
+    dialog.showModal();
+  });
+  setMenu(false);
+  if (!initial) {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    main.focus({ preventScroll: true });
+  }
+  main.classList.remove('scene-enter');
+  requestAnimationFrame(() => main.classList.add('scene-enter'));
+}
+
+menu.addEventListener('click', () => setMenu(menu.getAttribute('aria-expanded') !== 'true'));
+nav.addEventListener('click', event => {
+  if (event.target.closest('a')) setMenu(false);
+});
+document.querySelector('.skip-link').addEventListener('click', event => {
+  event.preventDefault();
+  main.focus();
+  main.scrollIntoView();
+});
+backdrop.addEventListener('click', () => { setMenu(false); menu.focus(); });
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && dialog.open) {
+    event.preventDefault();
+    dialog.close();
+    return;
+  }
+  if (event.key === 'Escape' && menu.getAttribute('aria-expanded') === 'true') { setMenu(false); menu.focus(); }
+});
+matchMedia('(max-width: 760px)').addEventListener('change', () => {
+  setMenu(false);
+  sidebar.inert = matchMedia('(max-width: 760px)').matches;
+});
+document.querySelector('#close-dialog').addEventListener('click', () => dialog.close());
+dialog.addEventListener('close', () => document.querySelector('#expanded-animation').replaceChildren());
+window.addEventListener('hashchange', render);
+render();
