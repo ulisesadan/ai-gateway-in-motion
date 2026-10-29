@@ -103,11 +103,11 @@ const sidebar = document.querySelector('#sidebar');
 const backdrop = document.querySelector('#nav-backdrop');
 const dialog = document.querySelector('#animation-dialog');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-let currentIndex = -1;
+let currentIndex = null;
 
 const number = index => String(index + 1).padStart(2, '0');
 const asset = (scene, index) => `Scenes/${number(index)}-${scene.id}.gif`;
-nav.innerHTML = scenes.map((scene, index) => `<a class="scene-link" href="#${scene.id}"><span class="scene-number">${number(index)}</span><span>${scene.nav}</span><span class="nav-active" aria-hidden="true"></span></a>`).join('');
+nav.innerHTML = '<a class="scene-link" href="#high-level-understanding"><span class="scene-number">00</span><span>High-level understanding</span><span class="nav-active" aria-hidden="true"></span></a>' + scenes.map((scene, index) => `<a class="scene-link" href="#${scene.id}"><span class="scene-number">${number(index)}</span><span>${scene.nav}</span><span class="nav-active" aria-hidden="true"></span></a>`).join('');
 
 function setMenu(open) {
   sidebar.classList.toggle('is-open', open);
@@ -118,29 +118,72 @@ function setMenu(open) {
 }
 
 function pageLink(index, next) {
+  if (index === -1 && !next) return '<a class="page-link" href="#high-level-understanding"><span aria-hidden="true">←</span><span><small>OVERVIEW / 00</small>High-level understanding</span></a>';
   if (index < 0 || index >= scenes.length) return '<span></span>';
   const scene = scenes[index];
   return `<a class="page-link ${next ? 'next' : ''}" href="#${scene.id}">${next ? '' : '<span aria-hidden="true">←</span>'}<span><small>${next ? 'NEXT' : 'PREVIOUS'} SCENE / ${number(index)}</small>${scene.nav}</span>${next ? '<span aria-hidden="true">→</span>' : ''}</a>`;
+}
+
+function finishNavigation(initial) {
+  setMenu(false);
+  if (!initial) {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    main.focus({ preventScroll: true });
+  }
+  main.classList.remove('scene-enter');
+  requestAnimationFrame(() => main.classList.add('scene-enter'));
+}
+
+function renderOverview() {
+  return `
+    <article aria-labelledby="scene-title" class="overview">
+      <div class="scene-heading"><span class="eyebrow">The big picture</span><span class="scene-count">OVERVIEW / 00</span></div>
+      <h1 id="scene-title">High-level understanding</h1>
+      <p class="intro">Azure API Management acts as an AI Gateway: one governed entry point between the applications that use AI and the models, agents, and tools that power them.</p>
+      <section class="overview-map" aria-label="High-level AI Gateway architecture">
+        <div><h2 class="section-label">AI consumers</h2><p>Web & mobile channels<br>Internal applications<br>Employees & enterprise systems</p></div>
+        <span class="overview-arrow" aria-hidden="true">→</span>
+        <div class="overview-gateway"><h2 class="section-label">Azure API Management</h2><p><strong>AI Gateway</strong></p><p>Secure access<br>Control capacity & cost<br>Observe every interaction</p></div>
+        <span class="overview-arrow" aria-hidden="true">→</span>
+        <div><h2 class="section-label">Approved AI backends</h2><p>Azure OpenAI & Foundry models<br>Other supported model APIs<br>Agents & MCP tools</p></div>
+      </section>
+      <section class="overview-section"><h2>Why put a gateway in front of AI?</h2><p>Direct-to-model access becomes difficult to govern as more teams and channels adopt AI. A gateway moves common controls into a shared enforcement point instead of asking every application to implement them independently.</p><div class="overview-challenges"><section><h3>Scattered access</h3><p>Direct endpoint calls and copied API keys create inconsistent access controls.</p></section><section><h3>Uneven protection</h3><p>Teams may apply different safety checks, personal-data handling, and logging practices.</p></section><section><h3>Shared-capacity contention</h3><p>One application's traffic spike can consume the model capacity other channels need.</p></section><section><h3>Limited accountability</h3><p>Without per-channel token metrics and traces, spend and audit evidence are hard to attribute.</p></section></div></section>
+      <section class="overview-section"><h2>Nine capabilities, three outcomes</h2><div class="overview-outcomes">${[
+        { title: 'Security & safety', text: 'Who can call, and what can pass.', indices: [1, 4, 5] },
+        { title: 'Scale & resilience', text: 'Fair capacity and resilient responses.', indices: [2, 3, 6] },
+        { title: 'Visibility & governance', text: 'One front door with attributable usage and traceability.', indices: [0, 7, 8] }
+      ].map(group => `<section><h3>${group.title}</h3><p>${group.text}</p><ul>${group.indices.map(index => `<li><a href="#${scenes[index].id}"><span class="scene-number">${number(index)}</span> ${scenes[index].nav}</a></li>`).join('')}</ul></section>`).join('')}</div></section>
+      <section class="overview-section"><h2>What happens to a request?</h2><ol class="overview-request"><li><strong>Establish trust.</strong> An application calls the gateway; configured policies validate its identity and authorization.</li><li><strong>Apply guardrails.</strong> Screen content, mask detected PII through a custom integration, and enforce token limits.</li><li><strong>Find an answer.</strong> Check the semantic cache; on a miss, route to an approved backend with configured retry and fallback controls.</li><li><strong>Return with evidence.</strong> Return the response, populate eligible cache entries, and emit the configured metrics and logs.</li></ol><p>Blocked requests and cache hits can end the model path early. This is a conceptual flow, not a ready-to-deploy policy configuration.</p></section>
+      <section class="overview-section"><h2>One layer, not the entire security architecture</h2><div class="details-grid"><section><h3>The gateway provides</h3><p>Central policy enforcement, identity-based model access, configured content and PII screening, token controls, routing, caching, and operational evidence.</p></section><section><h3>Your wider architecture still owns</h3><p>Identity lifecycle, network isolation, data classification and DLP, application security, model filters, privacy, retention, and compliance assessments.</p></section></div><aside class="consideration"><span aria-hidden="true">i</span><p><strong>Important boundary.</strong> APIM alone does not block direct model access or guarantee regulatory compliance. Model-side network and authentication controls prevent bypass; PII masking is a custom pattern. Logging and caching require explicit privacy controls.</p></aside></section>
+      <section class="overview-section"><h2>Start small, validate end to end</h2><p>Agree the architecture with security and risk teams, choose one or two pilot use cases, and define quotas, policies, and measurable outcomes. Validate latency, token usage, blocked requests, fallback behavior, and logging in non-production before expanding.</p><p class="overview-source">Based on slides 2–4 and 14–17 of the October 2026 Inbursa briefing. Scenarios, figures, and rollout timings are illustrative, not evidence of a deployed implementation.</p></section>
+      <nav class="scene-pagination" aria-label="Adjacent scenes"><span></span>${pageLink(0, true)}</nav>
+    </article>`;
 }
 
 function render() {
   const id = location.hash.slice(1);
   let index = scenes.findIndex(scene => scene.id === id);
   if (index === -1) {
-    index = 0;
-    history.replaceState(null, '', `#${scenes[0].id}`);
+    history.replaceState(null, '', '#high-level-understanding');
   }
   if (index === currentIndex) return;
-  const initial = currentIndex === -1;
+  const initial = currentIndex === null;
   currentIndex = index;
+  [...nav.children].forEach((link, navIndex) => {
+    if (navIndex === index + 1) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+    link.querySelector('.nav-active').textContent = navIndex === index + 1 ? '›' : '';
+  });
+  if (index === -1) {
+    document.title = 'High-level understanding | Azure AI Gateway';
+    document.querySelector('#breadcrumb-scene').textContent = 'Overview';
+    main.innerHTML = renderOverview();
+    finishNavigation(initial);
+    return;
+  }
   const scene = scenes[index];
   document.title = `${scene.nav} | Azure AI Gateway`;
   document.querySelector('#breadcrumb-scene').textContent = `Scene ${number(index)}`;
-  [...nav.children].forEach((link, navIndex) => {
-    if (navIndex === index) link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-    link.querySelector('.nav-active').textContent = navIndex === index ? '›' : '';
-  });
   main.innerHTML = `
     <article aria-labelledby="scene-title">
       <div class="scene-heading"><span class="eyebrow">${scene.category}</span><span class="scene-count">SCENE ${number(index)} <span aria-hidden="true">/</span> 09</span></div>
@@ -201,13 +244,7 @@ function render() {
     }
     dialog.showModal();
   });
-  setMenu(false);
-  if (!initial) {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    main.focus({ preventScroll: true });
-  }
-  main.classList.remove('scene-enter');
-  requestAnimationFrame(() => main.classList.add('scene-enter'));
+  finishNavigation(initial);
 }
 
 menu.addEventListener('click', () => setMenu(menu.getAttribute('aria-expanded') !== 'true'));

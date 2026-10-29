@@ -1,12 +1,14 @@
 # Azure AI Gateway Scene Explorer
 
-A static, responsive GitHub Pages site for the nine animated Azure API Management AI Gateway scenarios in the October 2026 Inbursa presentation.
+A static, responsive GitHub Pages site with a high-level introduction and nine animated Azure API Management AI Gateway scenarios from the October 2026 Inbursa presentation.
 
 ## Preview
 
 Open [index.html](index.html) directly in a browser. No installation, build, server, or API keys are needed. Fonts load from Google Fonts when available, with local fallbacks. All scene assets and application code are local.
 
-Each scene has a shareable hash URL, such as `index.html#semantic-caching`. The sidebar, previous/next links, and browser back/forward history navigate between scenes. Animation controls provide pause/play and an expanded view; reduced-motion preferences start animations paused.
+The default opening page, `index.html#high-level-understanding`, introduces the gateway architecture, the challenges it addresses, its three capability groups, the request flow, and shared responsibilities. It appears as entry 00 before scenes 01–09.
+
+Each scene has a shareable hash URL, such as `index.html#semantic-caching`. The sidebar, previous/next links, and browser back/forward history navigate between the overview and scenes. Animation controls provide pause/play and an expanded view; reduced-motion preferences start animations paused.
 
 ## Publish On GitHub Pages
 
