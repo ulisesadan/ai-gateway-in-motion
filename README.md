@@ -1,6 +1,6 @@
 # Azure AI Gateway Scene Explorer
 
-A static, responsive GitHub Pages site with a high-level introduction and nine animated Azure API Management AI Gateway scenarios from the October 2026 AI Gateway presentation.
+A static, responsive GitHub Pages site with a high-level introduction, nine animated Azure API Management AI Gateway scenarios, customer FAQs, and a concrete Azure reference architecture.
 
 ## Preview
 
@@ -18,19 +18,19 @@ Each scene has a shareable hash URL, such as `index.html#semantic-caching`. The 
 
 ## Publish On GitHub Pages
 
-1. Push this folder's contents to your GitHub repository, including `Scenes` and the PowerPoint.
+1. Push the site files and the `Scenes` and `assets` folders to your GitHub repository.
 2. In the repository, open **Settings > Pages**.
 3. Under **Build and deployment**, choose **Deploy from a branch**.
 4. Choose your branch (usually `main`) and **/ (root)**, then save.
 5. Open the URL GitHub provides once publication finishes, typically `https://<owner>.github.io/<repository>/`.
 
-All asset links are relative, so repository subpaths work without configuration. For a private repository, confirm your organization's GitHub Pages publishing and access policies first. The site exposes the scene assets and downloadable presentation to whoever can access the published site; review the deck and any customer references before publishing publicly.
+All asset links are relative, so repository subpaths work without configuration. For a private repository, confirm your organization's GitHub Pages publishing and access policies first. The site exposes its content and scene assets to whoever can access the published site; review any customer references before publishing publicly.
 
 ## Content And Maintenance
 
-- [app.js](app.js) contains the nine scene descriptions, GIF mapping, source slide numbers, and navigation behavior.
+- [app.js](app.js) contains the nine scene descriptions, GIF mapping, reference guides, and navigation behavior.
 - [styles.css](styles.css) defines the responsive layout and visual design.
 - [Scenes](Scenes) contains the original 1280 x 720 GIFs. Only the current scene's GIF is loaded into the page.
-- The source presentation is [Azure AI Gateway (animated).pptx](Azure%20AI%20Gateway%20(animated).pptx).
+- Further reading links point to [Microsoft Learn AI Gateway capabilities](https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities), the [APIM policy reference](https://learn.microsoft.com/azure/api-management/api-management-policies), and the [Azure AI Gateway labs](https://github.com/Azure-Samples/AI-Gateway).
 
-Scenario descriptions follow slides 5–13. The shared policy pipeline, responsibility boundaries, and adoption guidance follow slides 14–17, with context from slides 2–4. Implementation considerations distinguish custom patterns from built-in policies and preserve the presentation's illustrative assumptions. This is an explanatory site, not a deployable gateway configuration or a compliance assertion.
+Implementation considerations distinguish custom patterns from built-in policies. Scenarios, figures, and adoption timings are illustrative; validate current capabilities, tier support, and policy behavior against Microsoft Learn and the linked labs. This is an explanatory site, not a deployable gateway configuration or a compliance assertion.

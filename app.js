@@ -6,7 +6,7 @@ const scenes = [
     matters: 'Web, mobile, internal applications, and employees use the same controls instead of calling model endpoints directly. Teams no longer need to duplicate governance in every application.',
     tech: ['APIM as AI gateway', 'Managed identity', 'Private endpoints', 'Entra ID-only model authentication'],
     note: 'Blocking direct model access requires network and authentication settings on the model resources. APIM alone does not prevent bypass.',
-    flow: ['Web / mobile / internal apps', 'AI Gateway', 'Managed identity', 'Approved models'], slide: 5,
+    flow: ['Web / mobile / internal apps', 'AI Gateway', 'Managed identity', 'Approved models'],
     alt: 'Animated isometric diagram of multiple application channels accessing approved AI models through a central API Management gateway.'
   },
   {
@@ -16,7 +16,7 @@ const scenes = [
     matters: 'Expired or invalid tokens receive a 401 before reaching the model. Model API keys do not live in client applications; the gateway uses managed identity for backend access.',
     tech: ['validate-azure-ad-token', 'validate-jwt', 'Microsoft Entra ID', 'Managed identity'],
     note: 'This is an illustrative scenario. Configure roles, audiences, and application registrations for each application in Microsoft Entra ID. Authorization failures may return 403.',
-    flow: ['Application + Entra token', 'Validate identity & claims', 'Allow or reject', 'Model'], slide: 6,
+    flow: ['Application + Entra token', 'Validate identity & claims', 'Allow or reject', 'Model'],
     alt: 'Animated isometric scene showing identity validation at the AI gateway, with authorized calls passing and invalid credentials rejected.'
   },
   {
@@ -26,7 +26,7 @@ const scenes = [
     matters: 'One application\'s spike cannot consume the entire shared provisioned throughput (PTU) allocation. Requests over the configured limit receive 429 with Retry-After.',
     tech: ['llm-token-limit', 'APIM products', 'APIM subscriptions', 'Azure OpenAI PTU / Standard'],
     note: 'Token limits in the animation are illustrative. Set actual limits per application and environment during design, and make sure clients respect Retry-After.',
-    flow: ['Application request', 'Check token allowance', 'Within limit: model', 'Over limit: 429'], slide: 7,
+    flow: ['Application request', 'Check token allowance', 'Within limit: model', 'Over limit: 429'],
     alt: 'Animated isometric scene illustrating per-application token allowances and rejection of requests that exceed the configured quota.'
   },
   {
@@ -36,7 +36,7 @@ const scenes = [
     matters: 'When configured 429 or error thresholds are reached, a circuit breaker opens and the retry policy can send requests to the secondary. Applications keep the same gateway endpoint.',
     tech: ['APIM backend pools', 'Priority-based routing', 'Circuit breaker', 'retry policy'],
     note: 'Regions, deployments, and circuit-breaker thresholds are illustrative. Configure the pool, retry conditions, and backend compatibility explicitly; fallback is not automatic without these controls.',
-    flow: ['AI Gateway', 'PTU primary', 'Error / open circuit', 'Retry: Standard secondary'], slide: 8,
+    flow: ['AI Gateway', 'PTU primary', 'Error / open circuit', 'Retry: Standard secondary'],
     alt: 'Animated isometric diagram of a primary provisioned-throughput model and a secondary regional model receiving fallback traffic.'
   },
   {
@@ -46,7 +46,7 @@ const scenes = [
     matters: 'In this scenario, flagged jailbreak or prompt-injection attempts receive a 403 at the gateway, preventing the rejected prompt from reaching the model.',
     tech: ['llm-content-safety', 'Azure AI Content Safety', 'Prompt Shields', 'Custom blocklists'],
     note: 'Configure harm categories, severity thresholds, and blocklists per API. Gateway screening complements model content filters and application controls; it cannot detect every unsafe request.',
-    flow: ['Incoming prompt', 'Content Safety screening', 'Allow or block (403)', 'Model'], slide: 9,
+    flow: ['Incoming prompt', 'Content Safety screening', 'Allow or block (403)', 'Model'],
     alt: 'Animated isometric safety checkpoint screening prompts and blocking flagged content before it reaches an AI model.'
   },
   {
@@ -56,17 +56,17 @@ const scenes = [
     matters: 'Personal data is masked before the request reaches the model. In this pattern, logging is also configured to retain only redacted text.',
     tech: ['Custom policy pattern', 'send-request', 'set-body', 'Azure AI Language PII detection'],
     note: 'PII masking is a custom integration, not a built-in APIM policy. Detection coverage and redacted logging must be validated. This complements DLP, data classification, and application-level controls.',
-    flow: ['Prompt with personal data', 'Detect PII', 'Replace with placeholders', 'Model / redacted logs'], slide: 10,
+    flow: ['Prompt with personal data', 'Detect PII', 'Replace with placeholders', 'Model / redacted logs'],
     alt: 'Animated isometric scene showing personal information detected and replaced with placeholders before a prompt reaches the model.'
   },
   {
     id: 'semantic-caching', title: 'Semantic caching & latency', nav: 'Semantic caching', category: 'Scale & resilience',
     subtitle: 'Answer similar questions faster without repeating the model completion.',
     does: 'Creates an embedding of the prompt and looks for similar prompts in Azure Managed Redis. A cache hit returns the previously stored answer; a miss continues to the model and can populate the cache.',
-    matters: 'Repeat questions receive faster answers and cache hits avoid model completion tokens. The presentation illustrates approximately 0.3 seconds for a hit versus 2.4 seconds for a model response.',
+    matters: 'Repeat questions can receive faster answers, and cache hits avoid model completion tokens. Any example latency figures are illustrative; measure actual results with your workload and cache configuration.',
     tech: ['llm-semantic-cache-lookup', 'llm-semantic-cache-store', 'Azure Managed Redis (RediSearch)', 'Embeddings deployment'],
     note: 'The latencies and 0.95 similarity threshold are illustrative, not guarantees. Scope cache keys so personalized answers are never shared across users or tenants. Embedding and cache operations still have costs.',
-    flow: ['Prompt embedding', 'Similarity lookup', 'Hit: cached answer', 'Miss: model + store'], slide: 11,
+    flow: ['Prompt embedding', 'Similarity lookup', 'Hit: cached answer', 'Miss: model + store'],
     alt: 'Animated isometric diagram comparing a fast semantic cache hit with a slower model request for a cache miss.'
   },
   {
@@ -76,7 +76,7 @@ const scenes = [
     matters: 'FinOps teams can build dashboards, budgets, alerts, and chargeback views by business line, replacing opaque shared consumption with an attributable usage picture.',
     tech: ['llm-emit-token-metric', 'Application Insights', 'Azure Monitor alerts', 'Azure Monitor workbooks'],
     note: 'All figures, including the 80% budget alert, are illustrative and the scenario is fictional. Token metrics support cost attribution; they are not themselves a billing ledger or a hard spending cap.',
-    flow: ['Model interaction', 'Emit token metrics', 'Attribute by channel / app', 'Dashboards & alerts'], slide: 12,
+    flow: ['Model interaction', 'Emit token metrics', 'Attribute by channel / app', 'Dashboards & alerts'],
     alt: 'Animated isometric scene showing token usage attributed to business channels and feeding cost dashboards and budget alerts.'
   },
   {
@@ -86,7 +86,7 @@ const scenes = [
     matters: 'A traceable record of gateway interactions helps operations investigate failures and gives risk and audit teams evidence of how the configured controls behaved.',
     tech: ['APIM diagnostic settings', 'Gateway + LLM logs', 'Application Insights', 'Log Analytics', 'Azure Monitor alerts'],
     note: 'Prompt and completion logging is optional. Configure redaction, access controls, sampling, and retention in line with your organization\'s privacy and data-retention policies. Logs alone do not guarantee compliance.',
-    flow: ['Gateway interaction', 'Metrics & diagnostic logs', 'Log Analytics', 'Operations / risk / audit'], slide: 13,
+    flow: ['Gateway interaction', 'Metrics & diagnostic logs', 'Log Analytics', 'Operations / risk / audit'],
     alt: 'Animated isometric scene of AI gateway telemetry flowing into monitoring dashboards and traceable audit records.'
   }
 ];
@@ -158,7 +158,7 @@ function renderOverview() {
       ].map(group => `<section><h3>${group.title}</h3><p>${group.text}</p><ul>${group.indices.map(index => `<li><a href="#${scenes[index].id}"><span class="scene-number">${number(index)}</span> ${scenes[index].nav}</a></li>`).join('')}</ul></section>`).join('')}</div></section>
       <section class="overview-section"><h2>What happens to a request?</h2><ol class="overview-request"><li><strong>Establish trust.</strong> An application calls the gateway; configured policies validate its identity and authorization.</li><li><strong>Apply guardrails.</strong> Screen content, mask detected PII through a custom integration, and enforce token limits.</li><li><strong>Find an answer.</strong> Check the semantic cache; on a miss, route to an approved backend with configured retry and fallback controls.</li><li><strong>Return with evidence.</strong> Return the response, populate eligible cache entries, and emit the configured metrics and logs.</li></ol><p>Blocked requests and cache hits can end the model path early. This is a conceptual flow, not a ready-to-deploy policy configuration.</p></section>
       <section class="overview-section"><h2>One layer, not the entire security architecture</h2><div class="details-grid"><section><h3>The gateway provides</h3><p>Central policy enforcement, identity-based model access, configured content and PII screening, token controls, routing, caching, and operational evidence.</p></section><section><h3>Your wider architecture still owns</h3><p>Identity lifecycle, network isolation, data classification and DLP, application security, model filters, privacy, retention, and compliance assessments.</p></section></div><aside class="consideration"><span aria-hidden="true">i</span><p><strong>Important boundary.</strong> APIM alone does not block direct model access or guarantee regulatory compliance. Model-side network and authentication controls prevent bypass; PII masking is a custom pattern. Logging and caching require explicit privacy controls.</p></aside></section>
-      <section class="overview-section"><h2>Start small, validate end to end</h2><p>Agree the architecture with security and risk teams, choose one or two pilot use cases, and define quotas, policies, and measurable outcomes. Validate latency, token usage, blocked requests, fallback behavior, and logging in non-production before expanding.</p><p class="overview-source">Based on slides 2–4 and 14–17 of the October 2026 AI Gateway briefing. Scenarios, figures, and rollout timings are illustrative, not evidence of a deployed implementation.</p></section>
+      <section class="overview-section"><h2>Start small, validate end to end</h2><p>Agree the architecture with security and risk teams, choose one or two pilot use cases, and define quotas, policies, and measurable outcomes. Validate latency, token usage, blocked requests, fallback behavior, and logging in non-production before expanding.</p><p class="overview-source">Scenarios, figures, and rollout timings are illustrative, not evidence of a deployed implementation. Use Microsoft Learn for supported capabilities and the Azure AI Gateway labs for hands-on examples.</p><div class="references"><a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener noreferrer">AI Gateway documentation ↗</a><a href="https://github.com/Azure-Samples/AI-Gateway" target="_blank" rel="noopener noreferrer">Azure AI Gateway labs ↗</a></div></section>
       <nav class="scene-pagination" aria-label="Adjacent scenes"><span></span>${pageLink(0, true)}</nav>
     </article>`;
 }
@@ -216,7 +216,7 @@ function renderCustomerQuestions() {
         <div class="references"><a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noopener noreferrer">Azure Pricing Calculator ↗</a><a href="https://azure.microsoft.com/pricing/details/api-management/" target="_blank" rel="noopener noreferrer">APIM pricing ↗</a><a href="https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/" target="_blank" rel="noopener noreferrer">Azure OpenAI pricing ↗</a></div>
       </section>
       <section class="overview-section"><h2>Common questions before production</h2>${questions.map(([question, answer]) => `<details class="context-section"><summary>${question}</summary><div class="context-body"><p>${answer}</p></div></details>`).join('')}</section>
-      <section class="overview-section"><h2>What to bring to the architecture workshop</h2><ul class="guide-checklist"><li>Approved use cases, caller identities, data classifications, and permitted data geographies.</li><li>Model and API choices, monthly calls, average tokens, peak concurrency, and streaming requirements.</li><li>Availability targets, network constraints, expected growth, and existing APIM capacity.</li><li>Commercial rates, chargeback ownership, logging and retention requirements, and pilot acceptance criteria.</li></ul><p class="overview-source">Supplementary customer guidance checked against Microsoft documentation on October 29, 2026. Features, preview status, regional availability, and prices can change. This page extends the source presentation; it is not a customer-specific design, compliance assessment, or price quote.</p><div class="references"><a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener noreferrer">AI Gateway capabilities ↗</a><a href="https://learn.microsoft.com/azure/api-management/v2-service-tiers-overview" target="_blank" rel="noopener noreferrer">APIM v2 tiers & networking ↗</a><a href="https://learn.microsoft.com/azure/api-management/api-management-features" target="_blank" rel="noopener noreferrer">Tier feature comparison ↗</a></div></section>
+      <section class="overview-section"><h2>What to bring to the architecture workshop</h2><ul class="guide-checklist"><li>Approved use cases, caller identities, data classifications, and permitted data geographies.</li><li>Model and API choices, monthly calls, average tokens, peak concurrency, and streaming requirements.</li><li>Availability targets, network constraints, expected growth, and existing APIM capacity.</li><li>Commercial rates, chargeback ownership, logging and retention requirements, and pilot acceptance criteria.</li></ul><p class="overview-source">Customer guidance checked against Microsoft documentation on October 29, 2026. Features, preview status, regional availability, and prices can change. This is not a customer-specific design, compliance assessment, or price quote.</p><div class="references"><a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener noreferrer">AI Gateway capabilities ↗</a><a href="https://learn.microsoft.com/azure/api-management/v2-service-tiers-overview" target="_blank" rel="noopener noreferrer">APIM v2 tiers & networking ↗</a><a href="https://learn.microsoft.com/azure/api-management/api-management-features" target="_blank" rel="noopener noreferrer">Tier feature comparison ↗</a></div></section>
       <nav class="scene-pagination" aria-label="Adjacent scenes">${pageLink(scenes.length - 1, false)}<a class="page-link next" href="#azure-architecture"><span><small>REFERENCE ARCHITECTURE / 11</small>Azure architecture</span><span aria-hidden="true">→</span></a></nav>
     </article>`;
 }
@@ -375,15 +375,15 @@ function render() {
           <div class="animation-toolbar"><span class="animation-label"><span class="status-dot"></span>SCENE ${number(index)} / ANIMATED ARCHITECTURE</span><div class="tools"><button class="icon-button" id="toggle-animation" aria-label="Pause animation" title="Pause animation" aria-pressed="false">${icons.pause}</button><button class="icon-button" id="expand-animation" aria-label="Expand animation" title="Expand animation">${icons.expand}</button></div></div>
           <div class="animation-stage"><img id="scene-image" src="${asset(scene, index)}" alt="${scene.alt}" width="1280" height="720" decoding="async"><canvas id="scene-still" width="1280" height="720" role="img" aria-label="${scene.alt} Paused." hidden></canvas><div class="image-error" hidden><p>The animation could not be loaded.</p><a href="${asset(scene, index)}">Open scene GIF</a></div></div>
         </div>
-        <figcaption class="figure-caption"><span>Isometric architecture scene</span><span>CAPABILITY ${number(index)} / SLIDE ${scene.slide}</span></figcaption>
+        <figcaption class="figure-caption"><span>Isometric architecture scene</span><span>CAPABILITY ${number(index)} / 09</span></figcaption>
       </figure>
       <div class="details-grid"><section><h2 class="section-label">What it does</h2><p>${scene.does}</p></section><section><h2 class="section-label">Why it matters</h2><p>${scene.matters}</p></section></div>
       <section class="implementation"><h2 class="section-label">Enabled by</h2><div class="chips">${scene.tech.map(item => `<span class="chip">${item}</span>`).join('')}</div></section>
       <aside class="consideration"><span aria-hidden="true">i</span><p><strong>Design consideration.</strong> ${scene.note}</p></aside>
       <section class="flow-section"><h2 class="section-label">Scenario at a glance</h2><div class="flow">${scene.flow.map((step, stepIndex) => `${stepIndex ? '<span class="flow-arrow" aria-hidden="true">→</span>' : ''}<span class="flow-step ${stepIndex === 1 ? 'highlight' : ''}">${step}</span>`).join('')}</div></section>
-      <details class="context-section"><summary>The bigger picture: one ordered policy pipeline</summary><div class="context-body"><p>The reference pipeline in slide 14 connects these capabilities into a single request and response path.</p><h3 class="section-label">Inbound</h3><div class="pipeline">Validate token → Content safety → PII masking (custom) → Token limit → Cache lookup → Route backend → Foundry model</div><h3 class="section-label">Outbound</h3><div class="pipeline">Cache store → Emit token metrics → Log & trace → Return to channel</div><p>This is the presentation's conceptual reference flow. Cache hits and blocked requests can short-circuit the model path; actual policy placement and execution must be validated for the API.</p></div></details>
+      <details class="context-section"><summary>The bigger picture: one ordered policy pipeline</summary><div class="context-body"><p>This conceptual pipeline connects the capabilities into a single request and response path.</p><h3 class="section-label">Inbound</h3><div class="pipeline">Validate token → Content safety → PII masking (custom) → Token limit → Cache lookup → Route backend → Foundry model</div><h3 class="section-label">Outbound</h3><div class="pipeline">Cache store → Emit token metrics → Log & trace → Return to channel</div><p>Cache hits and blocked requests can short-circuit the model path; actual policy placement and execution must be validated for the API using the Microsoft Learn policy reference and hands-on labs.</p></div></details>
       <details class="context-section"><summary>Shared responsibility & adoption</summary><div class="context-body"><div class="context-columns"><section><h3>One layer in defense-in-depth</h3><p>The gateway centralizes policy enforcement, identity checks, configured screening, traffic controls, and audit evidence. It does not by itself guarantee CNBV or Banxico compliance, prevent every data leak, or replace identity management, DLP, model filters, and application security.</p></section><section><h3>A phased path to production</h3><ul><li>Weeks 0–6: gateway foundation, identity, token limits, metrics, and logging.</li><li>Weeks 6–12: content safety, backend resilience, and FAQ caching.</li><li>Week 12+: PII masking, chargeback, agents and MCP tools, and an operating model.</li></ul></section></div><p>Timings are indicative. Start with an architecture workshop, select 1–2 pilot use cases, agree quotas and KPIs, validate in non-production, then review results before rollout. Compliance depends on end-to-end controls and assessments.</p></div></details>
-      <details class="context-section"><summary>Source & further reading</summary><div class="context-body"><p>Adapted from <em>Azure AI Gateway (animated)</em>, Sebastian Adan, Sr. Cloud Solution Architect, Microsoft Mexico, October 2026. This scene corresponds to slide ${scene.slide}; shared context comes from slides 2–4 and 14–17. The scenarios and figures are illustrative, not evidence of a deployed customer implementation.</p><div class="references"><a href="Azure%20AI%20Gateway%20(animated).pptx" download>Download the presentation ↗</a><a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener noreferrer">AI Gateway documentation ↗</a><a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener noreferrer">APIM policy reference ↗</a></div></div></details>
+      <details class="context-section"><summary>Documentation & hands-on labs</summary><div class="context-body"><p>Explore supported AI Gateway capabilities and policy configuration in Microsoft Learn. Use the Azure AI Gateway labs for executable examples covering models, MCP tools, and agents. Scenarios and figures on this site are illustrative; verify each policy, dependency, and tier before implementation.</p><div class="references"><a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener noreferrer">Microsoft Learn: AI Gateway capabilities ↗</a><a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener noreferrer">Microsoft Learn: APIM policy reference ↗</a><a href="https://github.com/Azure-Samples/AI-Gateway" target="_blank" rel="noopener noreferrer">GitHub: Azure AI Gateway labs ↗</a></div></div></details>
       <nav class="scene-pagination" aria-label="Adjacent scenes">${pageLink(index - 1, false)}${pageLink(index + 1, true)}</nav>
     </article>`;
   const image = document.querySelector('#scene-image');
