@@ -8,6 +8,10 @@ Open [index.html](index.html) directly in a browser. No installation, build, ser
 
 The default opening page, `index.html#high-level-understanding`, introduces the gateway architecture, the challenges it addresses, its three capability groups, the request flow, and shared responsibilities. It appears as entry 00 before scenes 01–09.
 
+Entry 10, `index.html#customer-questions`, adds a sample logical Azure architecture, APIM-managed and Foundry-managed integration paths, a monthly usage-based cost worksheet, production FAQs, and an architecture workshop checklist. Supporting Microsoft documentation was checked on October 29, 2026. Revalidate feature availability, preview status, networking, and prices for each customer.
+
+The cost worksheet has illustrative workload defaults but no default prices. Supply verified USD model token rates and monthly APIM and supporting-service totals. It runs locally, does not call pricing APIs or store inputs, and is not a quote. PTU, tax, support, special token discounts, and items excluded from the supplied totals require a separate estimate. For a calculation check, 1,000,000 calls with 1,000 input and 300 output tokens at hypothetical rates of $0.15 and $0.60 per million tokens produce $330 of model usage; adding hypothetical monthly APIM and supporting-service totals of $700 and $150 yields $1,180. These numbers are test assumptions, not Azure prices.
+
 Each scene has a shareable hash URL, such as `index.html#semantic-caching`. The sidebar, previous/next links, and browser back/forward history navigate between the overview and scenes. Animation controls provide pause/play and an expanded view; reduced-motion preferences start animations paused.
 
 ## Publish On GitHub Pages

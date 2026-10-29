@@ -108,6 +108,7 @@ let currentIndex = null;
 const number = index => String(index + 1).padStart(2, '0');
 const asset = (scene, index) => `Scenes/${number(index)}-${scene.id}.gif`;
 nav.innerHTML = '<a class="scene-link" href="#high-level-understanding"><span class="scene-number">00</span><span>High-level understanding</span><span class="nav-active" aria-hidden="true"></span></a>' + scenes.map((scene, index) => `<a class="scene-link" href="#${scene.id}"><span class="scene-number">${number(index)}</span><span>${scene.nav}</span><span class="nav-active" aria-hidden="true"></span></a>`).join('');
+nav.insertAdjacentHTML('beforeend', '<a class="scene-link" href="#customer-questions"><span class="scene-number">10</span><span>Customer questions</span><span class="nav-active" aria-hidden="true"></span></a>');
 
 function setMenu(open) {
   sidebar.classList.toggle('is-open', open);
@@ -119,6 +120,7 @@ function setMenu(open) {
 
 function pageLink(index, next) {
   if (index === -1 && !next) return '<a class="page-link" href="#high-level-understanding"><span aria-hidden="true">←</span><span><small>OVERVIEW / 00</small>High-level understanding</span></a>';
+  if (index === scenes.length && next) return '<a class="page-link next" href="#customer-questions"><span><small>CUSTOMER GUIDE / 10</small>Customer questions</span><span aria-hidden="true">→</span></a>';
   if (index < 0 || index >= scenes.length) return '<span></span>';
   const scene = scenes[index];
   return `<a class="page-link ${next ? 'next' : ''}" href="#${scene.id}">${next ? '' : '<span aria-hidden="true">←</span>'}<span><small>${next ? 'NEXT' : 'PREVIOUS'} SCENE / ${number(index)}</small>${scene.nav}</span>${next ? '<span aria-hidden="true">→</span>' : ''}</a>`;
@@ -160,9 +162,89 @@ function renderOverview() {
     </article>`;
 }
 
+function renderCustomerQuestions() {
+  const costInputs = [
+    { name: 'calls', label: 'Model calls / month', value: '1000000', step: '1' },
+    { name: 'inputTokens', label: 'Average input tokens / call', value: '1000', step: '1' },
+    { name: 'outputTokens', label: 'Average output tokens / call', value: '300', step: '1' },
+    { name: 'inputRate', label: 'Input price / 1M tokens (USD)', value: '', step: 'any' },
+    { name: 'outputRate', label: 'Output price / 1M tokens (USD)', value: '', step: 'any' },
+    { name: 'gateway', label: 'Total APIM / month (USD)', value: '', step: 'any' },
+    { name: 'supporting', label: 'Other services / month (USD)', value: '', step: 'any' }
+  ];
+  const questions = [
+    ['Can we reuse an existing API Management instance?', 'Often, yes. For an APIM-managed integration, validate the instance\'s supported policies, networking, available capacity, isolation needs, and operational ownership. The Foundry portal association path has additional requirements: the existing instance must be a supported v2 tier in the same tenant and subscription as the Foundry resource, and the operator needs the required permissions. Separate production and non-production where the risk model requires it.'],
+    ['Which APIM tier should we choose?', 'Choose from the required features, not only request volume. Developer is for non-production and has no production SLA. Standard v2 supports outbound virtual network integration and inbound gateway private endpoints; Premium v2 also supports virtual network injection and zone redundancy. Availability, AI policy support, capacity, and limits vary by tier and region. Confirm the current feature matrix before selecting or pricing a SKU.'],
+    ['Can the architecture be private end to end?', 'Yes, with a supported tier and a designed network path. A common pattern uses private connectivity from enterprise clients to the APIM gateway, outbound connectivity from APIM to model private endpoints, private DNS resolution, and restricted model public access. Private client access and private backend access are separate configurations. Public customer channels normally reach an application backend first; the application backend can call the private gateway. Model authentication and network controls must prevent bypass.'],
+    ['Does model fallback also make the gateway highly available?', 'No. A secondary model protects against some backend failures, not an outage of the gateway itself. Design gateway availability, DNS or traffic management, capacity, and regional failover separately. Premium v2 supports zone redundancy, while built-in multi-region deployment is not currently available in v2 tiers. Validate the appropriate classic-tier or multi-instance design when multi-region gateway resilience is required. Test failover and confirm that approved data geographies are respected.'],
+    ['How much latency does the gateway add? Does streaming still work?', 'There is no universal overhead figure. Token validation, policy execution, network hops, content-safety calls, PII detection, and embedding lookups have different costs. Measure p50, p95, time to first token, and streaming duration using representative prompts and concurrency. Validate streaming support and buffering behavior for the selected API, model, and policies; do not assume that a policy tested on a non-streaming response behaves identically on a stream.'],
+    ['Are our prompts stored, or used to train models?', 'Gateway logging and model-provider data handling are different concerns. Prompt and completion logging in APIM is optional; configure redaction, sampling, retention, and access controls explicitly. Separately review the selected provider\'s terms, model deployment type, data processing geography, and applicable abuse-monitoring rules. Do not assume every Foundry catalog model has identical data-handling terms. Semantic caches also store answers and need tenant or user scoping and expiration.'],
+    ['Where do RAG, agents, and MCP tools fit?', 'Retrieval-augmented generation (RAG) and agent orchestration remain in the application or agent service. That service calls approved model and tool endpoints through the gateway where configured. APIM can govern model APIs and supported MCP or agent interfaces; it does not automatically govern traffic that bypasses it. Search indexes, data stores, document-level authorization, tool permissions, and evaluations remain separate controls and costs.'],
+    ['Do token quotas guarantee a hard financial budget?', 'No. Token limits constrain configured traffic counters; actual charges also depend on model prices, input versus output tokens, provisioned capacity, retries, tools, and supporting services. Azure budget alerts are notifications, not a universal spending stop. Establish per-application limits, alert owners, escalation actions, and a tested disable or containment process. Track actual billing alongside gateway token metrics.'],
+    ['Who operates this, and what changes in the applications?', 'A platform team typically owns APIM, shared policies, model onboarding, network paths, and telemetry. Application teams own prompts, authorization context, retries, evaluations, and end-user behavior. For imported model APIs, clients normally change the endpoint and authentication configuration while preserving a compatible API contract. Verify the base path, deployment mapping, headers, API version, timeouts, streaming, and SDK behavior in a pilot.'],
+    ['What should we prove before production?', 'Demonstrate authorized access and rejection, no direct model bypass, fair token allocation, model and gateway failure behavior, tenant-safe caching, PII handling, acceptable p95 latency, and traceability without sensitive-data leakage. Agree SLOs, load-test results, capacity headroom, cost attribution, incident ownership, retention, change control, and rollback criteria with security, risk, and operations.']
+  ];
+  return `
+    <article aria-labelledby="scene-title" class="overview customer-guide">
+      <div class="scene-heading"><span class="eyebrow">From concept to customer decisions</span><span class="scene-count">CUSTOMER GUIDE / 10</span></div>
+      <h1 id="scene-title">Customer questions</h1>
+      <p class="intro">A practical reference for architecture, expected cost, Microsoft Foundry integration, and the decisions that turn an AI Gateway concept into a production plan.</p>
+      <section class="overview-section"><h2>What could the Azure architecture look like?</h2><p>A sample logical architecture for an enterprise application using Azure OpenAI models in Microsoft Foundry. Components marked optional are added only when the scenario needs them.</p>
+        <figure class="reference-architecture">
+          <div class="architecture-identity"><strong>Microsoft Entra ID</strong><span>Client identity → APIM token validation · APIM managed identity → model access</span></div>
+          <div class="overview-map"><div><h3 class="section-label">Application layer</h3><p>Web / mobile experiences<br>Enterprise application backend<br>Employee assistants</p></div><span class="overview-arrow" aria-hidden="true">→</span><div class="overview-gateway"><h3 class="section-label">Azure API Management</h3><p><strong>AI Gateway</strong></p><p>Identity & policy enforcement<br>Token limits & backend pools<br>Metrics & diagnostics</p></div><span class="overview-arrow" aria-hidden="true">→</span><div><h3 class="section-label">Microsoft Foundry</h3><p>Azure OpenAI deployment<br>Primary model endpoint<br>Optional secondary deployment</p></div></div>
+          <div class="architecture-support"><section><h3>Optional policy dependencies</h3><p>Azure AI Content Safety<br>Azure AI Language for custom PII masking<br>Azure Managed Redis + embeddings for caching</p></section><section><h3>Observability</h3><p>Application Insights + Log Analytics<br>Azure Monitor alerts and workbooks<br>Configured privacy and retention controls</p></section><section><h3>Private deployment option</h3><p>Tier-appropriate APIM networking<br>Model private endpoints + private DNS<br>Restricted public access on model resources</p></section></div>
+          <figcaption class="overview-source">Logical connections, not a subnet or deployment diagram. Response traffic follows the reverse path. Supporting services are called or receive telemetry only when configured.</figcaption>
+        </figure>
+        <aside class="consideration"><span aria-hidden="true">i</span><p><strong>Scope matters.</strong> The gateway governs traffic that flows through it. Application hosting, RAG search, data stores, agent execution, private connectivity, and regional resilience must be designed and budgeted separately. This sample is not an implemented Inbursa architecture.</p></aside>
+      </section>
+      <section class="overview-section"><h2>How does it integrate with Microsoft Foundry?</h2><div class="details-grid"><section><h3>Path A · Configure in API Management</h3><ol class="guide-steps"><li>Deploy an approved model in Foundry.</li><li>Import its API into APIM using the Microsoft Foundry import experience and select the compatible API contract.</li><li>Configure and verify the backend managed identity and model access. For Azure OpenAI, the documented inference role is Cognitive Services OpenAI User, scoped to the model resource.</li><li>Validate the client token separately, then apply the required token, routing, safety, and telemetry policies.</li><li>Point the application at the APIM API endpoint and test the complete request path.</li></ol></section><section><h3>Path B · Associate in Foundry</h3><p>The integrated AI Gateway experience in Foundry is marked <strong>preview</strong> in the capability guidance. In Foundry, use Manage → AI Gateway to create or associate an eligible APIM instance, then enable the relevant projects.</p><p>Reusing an instance requires a supported v2 tier in the same tenant and subscription, plus the required permissions. Existing projects must be enabled explicitly. Confirm current prerequisites, networking, and preview terms before production.</p></section></div><p>APIM is the governance gateway; Foundry supplies the model and agent development environment and associated services. Creating a Foundry project alone does not make arbitrary application traffic pass through APIM.</p><div class="references"><a href="https://learn.microsoft.com/azure/api-management/azure-ai-foundry-api" target="_blank" rel="noopener noreferrer">Import a Foundry API ↗</a><a href="https://learn.microsoft.com/azure/foundry/configuration/enable-ai-api-management-gateway-portal" target="_blank" rel="noopener noreferrer">Foundry gateway setup ↗</a><a href="https://learn.microsoft.com/azure/api-management/api-management-authenticate-authorize-ai-apis" target="_blank" rel="noopener noreferrer">Authentication guidance ↗</a></div></section>
+      <section class="overview-section"><h2>What should we expect to pay?</h2><p>There is no single AI Gateway price for every architecture. AI Gateway capabilities extend APIM rather than replacing model billing. Build an estimate for the selected region, currency, SKU, model deployment type, usage, and commercial agreement.</p>
+        <div class="cost-table-wrapper"><table class="cost-table"><caption>Monthly cost components</caption><thead><tr><th scope="col">Component</th><th scope="col">What drives the charge</th><th scope="col">Planning decision</th></tr></thead><tbody>
+          <tr><th scope="row">API Management</th><td>Tier, units, running time, requests or overages where applicable, and additional gateways.</td><td>Price the total configured gateway footprint, including non-production and resilience.</td></tr>
+          <tr><th scope="row">Model inference</th><td>Input and output tokens for usage-based deployments, or provisioned capacity and commitment terms.</td><td>Compare pay-as-you-go with PTU at realistic utilization. They are different billing models.</td></tr>
+          <tr><th scope="row">Optional AI controls</th><td>Content Safety, Language PII detection, embeddings, and Redis capacity or usage.</td><td>Add only the services required by the policies; cache hits do not eliminate every cost.</td></tr>
+          <tr><th scope="row">Monitoring</th><td>Log ingestion, retention, export, alerts, and related telemetry charges.</td><td>Forecast volume with privacy-aware sampling and retention settings.</td></tr>
+          <tr><th scope="row">Network & application</th><td>Private endpoints, data processing, DNS, inter-region transfer, application hosting, search, tools, and storage.</td><td>Include the surrounding workload and operational costs, not just APIM.</td></tr>
+        </tbody></table></div>
+        <h3>Usage-based monthly worksheet</h3><p>The workload defaults below are illustrative. Supply verified USD prices and monthly service totals from your quote or Azure Pricing Calculator; use 0 only for a cost you have deliberately excluded. No live prices are fetched or stored.</p>
+        <form id="cost-form" class="cost-form" aria-label="Monthly cost assumptions">${costInputs.map(field => `<label for="cost-${field.name}">${field.label}<input id="cost-${field.name}" name="${field.name}" type="number" min="0" step="${field.step}" value="${field.value}" ${field.value === '' ? 'placeholder="Verified price"' : ''} required></label>`).join('')}</form>
+        <div class="cost-result"><h3>Calculated monthly subtotal</h3><output id="cost-result" for="cost-calls cost-inputTokens cost-outputTokens cost-inputRate cost-outputRate cost-gateway cost-supporting" aria-live="polite">Enter all price fields to calculate a subtotal.</output></div>
+        <p class="cost-formula">Model cost = calls × (input tokens × input price + output tokens × output price) ÷ 1,000,000.<br>Subtotal = model cost + APIM + other services.</p>
+        <aside class="consideration"><span aria-hidden="true">i</span><p><strong>Not a quote.</strong> This simple worksheet assumes one usage-based model and average billable tokens; it does not model PTU, cached-input discounts, batch rates, or multiple model prices. Count billable calls, including retries and agent steps, and include RAG context in input tokens. It excludes tax, support, and any items omitted from your service totals.</p></aside>
+        <div class="references"><a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noopener noreferrer">Azure Pricing Calculator ↗</a><a href="https://azure.microsoft.com/pricing/details/api-management/" target="_blank" rel="noopener noreferrer">APIM pricing ↗</a><a href="https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/" target="_blank" rel="noopener noreferrer">Azure OpenAI pricing ↗</a></div>
+      </section>
+      <section class="overview-section"><h2>Common questions before production</h2>${questions.map(([question, answer]) => `<details class="context-section"><summary>${question}</summary><div class="context-body"><p>${answer}</p></div></details>`).join('')}</section>
+      <section class="overview-section"><h2>What to bring to the architecture workshop</h2><ul class="guide-checklist"><li>Approved use cases, caller identities, data classifications, and permitted data geographies.</li><li>Model and API choices, monthly calls, average tokens, peak concurrency, and streaming requirements.</li><li>Availability targets, network constraints, expected growth, and existing APIM capacity.</li><li>Commercial rates, chargeback ownership, logging and retention requirements, and pilot acceptance criteria.</li></ul><p class="overview-source">Supplementary customer guidance checked against Microsoft documentation on October 29, 2026. Features, preview status, regional availability, and prices can change. This page extends the source presentation; it is not a customer-specific design, compliance assessment, or price quote.</p><div class="references"><a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener noreferrer">AI Gateway capabilities ↗</a><a href="https://learn.microsoft.com/azure/api-management/v2-service-tiers-overview" target="_blank" rel="noopener noreferrer">APIM v2 tiers & networking ↗</a><a href="https://learn.microsoft.com/azure/api-management/api-management-features" target="_blank" rel="noopener noreferrer">Tier feature comparison ↗</a></div></section>
+      <nav class="scene-pagination" aria-label="Adjacent scenes">${pageLink(scenes.length - 1, false)}<span></span></nav>
+    </article>`;
+}
+
+function initializeCostWorksheet() {
+  const form = document.querySelector('#cost-form');
+  const result = document.querySelector('#cost-result');
+  form.addEventListener('submit', event => event.preventDefault());
+  form.addEventListener('input', () => {
+    const fields = [...form.querySelectorAll('input')];
+    if (fields.some(field => field.value === '' || !field.validity.valid || !Number.isFinite(field.valueAsNumber))) {
+      result.textContent = 'Enter valid, non-negative values in every field.';
+      return;
+    }
+    const values = Object.fromEntries(fields.map(field => [field.name, field.valueAsNumber]));
+    const model = values.calls * (values.inputTokens * values.inputRate + values.outputTokens * values.outputRate) / 1000000;
+    const total = model + values.gateway + values.supporting;
+    if (!Number.isFinite(total)) {
+      result.textContent = 'These assumptions exceed the calculation range.';
+      return;
+    }
+    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+    result.textContent = `${usd.format(total)} / month · Model: ${usd.format(model)} · APIM: ${usd.format(values.gateway)} · Other: ${usd.format(values.supporting)}`;
+  });
+}
+
 function render() {
   const id = location.hash.slice(1);
-  let index = scenes.findIndex(scene => scene.id === id);
+  let index = id === 'customer-questions' ? scenes.length : scenes.findIndex(scene => scene.id === id);
   if (index === -1) {
     history.replaceState(null, '', '#high-level-understanding');
   }
@@ -178,6 +260,14 @@ function render() {
     document.title = 'High-level understanding | Azure AI Gateway';
     document.querySelector('#breadcrumb-scene').textContent = 'Overview';
     main.innerHTML = renderOverview();
+    finishNavigation(initial);
+    return;
+  }
+  if (index === scenes.length) {
+    document.title = 'Customer questions | Azure AI Gateway';
+    document.querySelector('#breadcrumb-scene').textContent = 'Customer guide';
+    main.innerHTML = renderCustomerQuestions();
+    initializeCostWorksheet();
     finishNavigation(initial);
     return;
   }
