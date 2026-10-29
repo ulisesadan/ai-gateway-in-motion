@@ -1,6 +1,6 @@
 # Azure AI Gateway Scene Explorer
 
-A static, responsive GitHub Pages site with a high-level introduction and nine animated Azure API Management AI Gateway scenarios from the October 2026 Inbursa presentation.
+A static, responsive GitHub Pages site with a high-level introduction and nine animated Azure API Management AI Gateway scenarios from the October 2026 AI Gateway presentation.
 
 ## Preview
 
@@ -22,13 +22,13 @@ Each scene has a shareable hash URL, such as `index.html#semantic-caching`. The 
 4. Choose your branch (usually `main`) and **/ (root)**, then save.
 5. Open the URL GitHub provides once publication finishes, typically `https://<owner>.github.io/<repository>/`.
 
-All asset links are relative, so repository subpaths work without configuration. For a private repository, confirm your organization's GitHub Pages publishing and access policies first. The site exposes the scene assets and downloadable presentation to whoever can access the published site; review the deck and Inbursa references before publishing publicly.
+All asset links are relative, so repository subpaths work without configuration. For a private repository, confirm your organization's GitHub Pages publishing and access policies first. The site exposes the scene assets and downloadable presentation to whoever can access the published site; review the deck and any customer references before publishing publicly.
 
 ## Content And Maintenance
 
 - [app.js](app.js) contains the nine scene descriptions, GIF mapping, source slide numbers, and navigation behavior.
 - [styles.css](styles.css) defines the responsive layout and visual design.
 - [Scenes](Scenes) contains the original 1280 x 720 GIFs. Only the current scene's GIF is loaded into the page.
-- The source presentation is [Inbursa - Azure AI Gateway (animated).pptx](Inbursa%20-%20Azure%20AI%20Gateway%20(animated).pptx).
+- The source presentation is [Azure AI Gateway (animated).pptx](Azure%20AI%20Gateway%20(animated).pptx).
 
 Scenario descriptions follow slides 5–13. The shared policy pipeline, responsibility boundaries, and adoption guidance follow slides 14–17, with context from slides 2–4. Implementation considerations distinguish custom patterns from built-in policies and preserve the presentation's illustrative assumptions. This is an explanatory site, not a deployable gateway configuration or a compliance assertion.
