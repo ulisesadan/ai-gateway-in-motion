@@ -96,6 +96,24 @@ const icons = {
   play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 4 12 8-12 8Z"/></svg>',
   expand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>'
 };
+const workshopVideos = [
+  {
+    id: 'add-ai-models',
+    title: 'Add AI models to AI Gateway',
+    description: 'Loading AI models into AI Gateway.',
+    recorded: '2026-11-02',
+    dateLabel: 'November 2, 2026',
+    url: 'https://microsoft-my.sharepoint.com/:v:/p/seadan/IQDmGKVGz1lTR5y7uyDA7O7HAV1zHDoaMyxf8qFNV5NR4QA?e=bWzFSp'
+  },
+  {
+    id: 'link-ai-gateway-foundry',
+    title: 'Link AI Gateway to AI Foundry',
+    description: 'Connect AI Foundry to your AI Gateway.',
+    recorded: '2026-11-02',
+    dateLabel: 'November 2, 2026',
+    url: 'https://microsoft-my.sharepoint.com/:v:/r/personal/seadan_microsoft_com/_layouts/15/stream.aspx?id=%2Fpersonal%2Fseadan_microsoft_com%2FDocuments%2FRecordings%2FAI%20Gateway%20and%20Foundry%20Link-20261102_181428-Meeting%20Recording%2FExports%2FAI%20Gateway%20and%20Foundry%20Link-20261102_181428-Meeting%20Recording.mp4&share=cQpCpYZL3yaDSoEG_aQGq9oNEgUCSCrHhwUEYFQ5KRQCeQTIgg&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbE1vZGUiOiJtaXMiLCJyZWZlcnJhbFZpZXciOiJwb3N0cm9sbC1jb3B5bGluayIsInJlZmVycmFsUGxheWJhY2tTZXNzaW9uSWQiOiI1YTUyODdkNi1hZGFkLTRiNWYtYTAzZS0xZWZiOGNmY2EwYzgifX0%3D'
+  }
+];
 const main = document.querySelector('main');
 const nav = document.querySelector('#scene-nav');
 const menu = document.querySelector('#menu-toggle');
@@ -110,6 +128,7 @@ const asset = (scene, index) => `Scenes/slower-gifs/${number(index)}-${scene.id}
 nav.innerHTML = '<a class="scene-link" href="#high-level-understanding"><span class="scene-number">00</span><span>High-level understanding</span><span class="nav-active" aria-hidden="true"></span></a>' + scenes.map((scene, index) => `<a class="scene-link" href="#${scene.id}"><span class="scene-number">${number(index)}</span><span>${scene.nav}</span><span class="nav-active" aria-hidden="true"></span></a>`).join('');
 nav.insertAdjacentHTML('beforeend', '<a class="scene-link" href="#customer-questions"><span class="scene-number">10</span><span>Customer questions</span><span class="nav-active" aria-hidden="true"></span></a>');
 nav.insertAdjacentHTML('beforeend', '<a class="scene-link" href="#azure-architecture"><span class="scene-number">11</span><span>Azure architecture</span><span class="nav-active" aria-hidden="true"></span></a>');
+nav.insertAdjacentHTML('beforeend', '<a class="scene-link" href="#ai-gateway-workshop"><span class="scene-number">12</span><span>AI Gateway workshop</span><span class="nav-active" aria-hidden="true"></span></a>');
 
 function setMenu(open) {
   sidebar.classList.toggle('is-open', open);
@@ -316,9 +335,72 @@ function initializeCostWorksheet() {
   });
 }
 
+function renderWorkshop() {
+  return `
+    <article class="workshop" aria-labelledby="scene-title">
+      <div class="scene-heading"><span class="eyebrow">Video library</span><span class="scene-count">WORKSHOP / 12</span></div>
+      <h1 id="scene-title">AI Gateway workshop</h1>
+      <section id="workshop-watch" class="workshop-watch" aria-labelledby="workshop-video-title" hidden>
+        <div class="workshop-player" id="workshop-player"></div>
+        <h2 id="workshop-video-title"></h2>
+        <div class="workshop-watch-meta"><span id="workshop-video-date"></span><a id="workshop-source" target="_blank" rel="noopener noreferrer">Open in SharePoint <span aria-hidden="true">↗</span></a></div>
+        <p class="workshop-access">Microsoft sign-in and permission to access the recording are required. If embedded playback is unavailable, open the recording in SharePoint.</p>
+      </section>
+      <section class="workshop-library" aria-labelledby="workshop-library-title">
+        <div class="workshop-library-heading"><h2 id="workshop-library-title">Workshop recordings</h2><span>${workshopVideos.length} ${workshopVideos.length === 1 ? 'video' : 'videos'}</span></div>
+        <div class="workshop-grid">${workshopVideos.map(video => `
+          <button type="button" class="workshop-video" data-video-id="${video.id}" aria-controls="workshop-watch" aria-pressed="false">
+            <span class="workshop-thumbnail"><img src="assets/azure-icons/API-Management-Services.svg" alt="" width="72" height="72"><span class="workshop-play">${icons.play}</span><span class="workshop-thumbnail-label">AI GATEWAY / WORKSHOP</span></span>
+            <span class="workshop-video-title">${video.title}</span>
+            <span class="workshop-video-description">${video.description}</span>
+            <time datetime="${video.recorded}">${video.dateLabel}</time>
+          </button>`).join('')}</div>
+      </section>
+      <nav class="scene-pagination" aria-label="Adjacent guides"><a class="page-link" href="#azure-architecture"><span aria-hidden="true">←</span><span><small>REFERENCE ARCHITECTURE / 11</small>Azure architecture</span></a></nav>
+    </article>`;
+}
+
+function initializeWorkshop() {
+  const watch = document.querySelector('#workshop-watch');
+  const cards = [...document.querySelectorAll('.workshop-video')];
+  const selectVideo = (video, focusPlayer) => {
+    let player;
+    if (video.embedUrl) {
+      player = document.createElement('iframe');
+      player.src = video.embedUrl;
+      player.title = video.title;
+      player.allow = 'autoplay; fullscreen; picture-in-picture';
+    } else {
+      player = document.createElement('a');
+      player.className = 'workshop-player-link';
+      player.href = video.url;
+      player.target = '_blank';
+      player.rel = 'noopener noreferrer';
+      player.setAttribute('aria-label', `Watch ${video.title} in SharePoint (opens in a new tab)`);
+      player.innerHTML = '<img src="assets/azure-icons/API-Management-Services.svg" alt="" width="88" height="88"><span class="workshop-player-play">' + icons.play + '</span><span>Watch in SharePoint</span>';
+    }
+    document.querySelector('#workshop-player').replaceChildren(player);
+    document.querySelector('#workshop-video-title').textContent = video.title;
+    document.querySelector('#workshop-video-date').textContent = video.dateLabel;
+    document.querySelector('#workshop-source').href = video.url;
+    watch.hidden = false;
+    cards.forEach(card => card.setAttribute('aria-pressed', String(card.dataset.videoId === video.id)));
+    if (focusPlayer) {
+      const title = document.querySelector('#workshop-video-title');
+      title.tabIndex = -1;
+      title.focus({ preventScroll: true });
+      watch.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }
+  };
+  cards.forEach(card => card.addEventListener('click', () => {
+    selectVideo(workshopVideos.find(video => video.id === card.dataset.videoId), true);
+  }));
+  if (workshopVideos.length) selectVideo(workshopVideos[0], false);
+}
+
 function render() {
   const id = location.hash.slice(1);
-  let index = id === 'azure-architecture' ? scenes.length + 1 : id === 'customer-questions' ? scenes.length : scenes.findIndex(scene => scene.id === id);
+  let index = id === 'ai-gateway-workshop' ? scenes.length + 2 : id === 'azure-architecture' ? scenes.length + 1 : id === 'customer-questions' ? scenes.length : scenes.findIndex(scene => scene.id === id);
   if (index === -1) {
     history.replaceState(null, '', '#high-level-understanding');
   }
@@ -334,6 +416,14 @@ function render() {
     document.title = 'High-level understanding | Azure AI Gateway';
     document.querySelector('#breadcrumb-scene').textContent = 'Overview';
     main.innerHTML = renderOverview();
+    finishNavigation(initial);
+    return;
+  }
+  if (index === scenes.length + 2) {
+    document.title = 'AI Gateway workshop | Azure AI Gateway';
+    document.querySelector('#breadcrumb-scene').textContent = 'AI Gateway workshop';
+    main.innerHTML = renderWorkshop();
+    initializeWorkshop();
     finishNavigation(initial);
     return;
   }
