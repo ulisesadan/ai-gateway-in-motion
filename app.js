@@ -100,6 +100,8 @@ const workshopVideos = [
   {
     id: 'add-ai-models',
     title: 'Add AI models to AI Gateway',
+    topic: 'Model configuration',
+    thumbnailTitle: 'Add AI models',
     description: 'Loading AI models into AI Gateway.',
     recorded: '2026-11-02',
     dateLabel: 'November 2, 2026',
@@ -108,6 +110,8 @@ const workshopVideos = [
   {
     id: 'link-ai-gateway-foundry',
     title: 'Link AI Gateway to AI Foundry',
+    topic: 'Foundry integration',
+    thumbnailTitle: 'Gateway + Foundry',
     description: 'Connect AI Foundry to your AI Gateway.',
     recorded: '2026-11-02',
     dateLabel: 'November 2, 2026',
@@ -338,23 +342,26 @@ function initializeCostWorksheet() {
 function renderWorkshop() {
   return `
     <article class="workshop" aria-labelledby="scene-title">
-      <div class="scene-heading"><span class="eyebrow">Video library</span><span class="scene-count">WORKSHOP / 12</span></div>
-      <h1 id="scene-title">AI Gateway workshop</h1>
+      <header class="workshop-channel">
+        <div class="workshop-channel-art" aria-hidden="true"><img src="assets/azure-icons/API-Management-Services.svg" alt="" width="80" height="80"><span>AI GATEWAY</span><span class="workshop-channel-art-label">WORKSHOP / 12</span></div>
+        <div class="workshop-channel-identity"><img class="workshop-avatar" src="assets/azure-icons/API-Management-Services.svg" alt="" width="64" height="64"><div><h1 id="scene-title">AI Gateway workshop</h1><p>Azure API Management <span aria-hidden="true">&middot;</span> ${workshopVideos.length} recordings</p><p class="workshop-channel-summary">Understand. Deploy. Configure. Connect.</p></div></div>
+      </header>
+      <div class="workshop-channel-nav"><span class="workshop-current-view">Videos</span><label class="workshop-search"><span>Search videos</span><input id="workshop-search" type="search" placeholder="Search videos" aria-label="Search workshop videos"></label></div>
       <section id="workshop-watch" class="workshop-watch" aria-labelledby="workshop-video-title" hidden>
+        <div class="workshop-watch-heading"><span class="section-label">Now watching</span><button type="button" class="icon-button" id="workshop-close" aria-label="Close video preview" title="Close video preview">&times;</button></div>
         <div class="workshop-player" id="workshop-player"></div>
         <h2 id="workshop-video-title"></h2>
         <div class="workshop-watch-meta"><span id="workshop-video-date"></span><a id="workshop-source" target="_blank" rel="noopener noreferrer">Open in SharePoint <span aria-hidden="true">↗</span></a></div>
         <p class="workshop-access">Microsoft sign-in and permission to access the recording are required. If embedded playback is unavailable, open the recording in SharePoint.</p>
       </section>
       <section class="workshop-library" aria-labelledby="workshop-library-title">
-        <div class="workshop-library-heading"><h2 id="workshop-library-title">Workshop recordings</h2><span>${workshopVideos.length} ${workshopVideos.length === 1 ? 'video' : 'videos'}</span></div>
+        <div class="workshop-library-heading"><div><h2 id="workshop-library-title">Workshop recordings</h2><span id="workshop-results" role="status">${workshopVideos.length} videos</span></div><label class="workshop-order"><span>Order</span><select id="workshop-order" aria-label="Video order"><option value="workshop">Workshop order</option><option value="newest">Newest first</option><option value="title">Title A-Z</option></select></label></div>
         <div class="workshop-grid">${workshopVideos.map(video => `
           <button type="button" class="workshop-video" data-video-id="${video.id}" aria-controls="workshop-watch" aria-pressed="false">
-            <span class="workshop-thumbnail"><img src="assets/azure-icons/API-Management-Services.svg" alt="" width="72" height="72"><span class="workshop-play">${icons.play}</span><span class="workshop-thumbnail-label">AI GATEWAY / WORKSHOP</span></span>
-            <span class="workshop-video-title">${video.title}</span>
-            <span class="workshop-video-description">${video.description}</span>
-            <time datetime="${video.recorded}">${video.dateLabel}</time>
+            <span class="workshop-thumbnail workshop-thumbnail-${video.id}"><span class="workshop-thumbnail-topic">${video.topic}</span><span class="workshop-thumbnail-title">${video.thumbnailTitle}</span><img src="assets/azure-icons/${video.id === 'link-ai-gateway-foundry' ? 'Cognitive-Services' : 'API-Management-Services'}.svg" alt="" width="72" height="72"><span class="workshop-play">${icons.play}</span><span class="workshop-thumbnail-label">AI GATEWAY WORKSHOP</span></span>
+            <span class="workshop-video-info"><img class="workshop-video-avatar" src="assets/azure-icons/API-Management-Services.svg" alt="" width="28" height="28"><span class="workshop-video-copy"><span class="workshop-video-title">${video.title}</span><span class="workshop-video-description">${video.description}</span><span class="workshop-video-channel">Azure AI Gateway</span><time datetime="${video.recorded}">${video.dateLabel}</time></span></span>
           </button>`).join('')}</div>
+        <p id="workshop-empty" class="workshop-empty" hidden>No recordings match your search.</p>
       </section>
       <nav class="scene-pagination" aria-label="Adjacent guides"><a class="page-link" href="#azure-architecture"><span aria-hidden="true">←</span><span><small>REFERENCE ARCHITECTURE / 11</small>Azure architecture</span></a></nav>
     </article>`;
@@ -363,6 +370,7 @@ function renderWorkshop() {
 function initializeWorkshop() {
   const watch = document.querySelector('#workshop-watch');
   const cards = [...document.querySelectorAll('.workshop-video')];
+  let selectedCard = null;
   const selectVideo = (video, focusPlayer) => {
     let player;
     if (video.embedUrl) {
@@ -393,9 +401,34 @@ function initializeWorkshop() {
     }
   };
   cards.forEach(card => card.addEventListener('click', () => {
+    selectedCard = card;
     selectVideo(workshopVideos.find(video => video.id === card.dataset.videoId), true);
   }));
-  if (workshopVideos.length) selectVideo(workshopVideos[0], false);
+  document.querySelector('#workshop-close').addEventListener('click', () => {
+    watch.hidden = true;
+    document.querySelector('#workshop-player').replaceChildren();
+    cards.forEach(card => card.setAttribute('aria-pressed', 'false'));
+    if (selectedCard && !selectedCard.hidden) selectedCard.focus();
+    else document.querySelector('#workshop-search').focus();
+  });
+  const updateLibrary = () => {
+    const query = document.querySelector('#workshop-search').value.trim().toLowerCase();
+    const order = document.querySelector('#workshop-order').value;
+    const ordered = [...workshopVideos];
+    if (order === 'newest') ordered.sort((first, second) => second.recorded.localeCompare(first.recorded));
+    if (order === 'title') ordered.sort((first, second) => first.title.localeCompare(second.title));
+    let count = 0;
+    ordered.forEach(video => {
+      const card = cards.find(item => item.dataset.videoId === video.id);
+      card.hidden = !`${video.title} ${video.description} ${video.topic}`.toLowerCase().includes(query);
+      if (!card.hidden) count += 1;
+      document.querySelector('.workshop-grid').append(card);
+    });
+    document.querySelector('#workshop-results').textContent = `${count} ${count === 1 ? 'video' : 'videos'}`;
+    document.querySelector('#workshop-empty').hidden = count !== 0;
+  };
+  document.querySelector('#workshop-search').addEventListener('input', updateLibrary);
+  document.querySelector('#workshop-order').addEventListener('change', updateLibrary);
 }
 
 function render() {

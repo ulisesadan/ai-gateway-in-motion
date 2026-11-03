@@ -18,7 +18,7 @@ Each scene has a shareable hash URL, such as `index.html#semantic-caching`. The 
 
 ## Workshop Videos
 
-Entry 12, [AI Gateway workshop](index.html#ai-gateway-workshop), contains a responsive recording gallery and inline viewing area. Recordings are not assigned lesson numbers. Add future recordings to the `workshopVideos` array in [app.js](app.js), supplying a unique ID, title, description, ISO recording date, display date, and URL. The thumbnail is workshop artwork, not a frame from the recording.
+Entry 12, [AI Gateway workshop](index.html#ai-gateway-workshop), uses a channel-style video library with thumbnail cards, search, ordering, and a viewing area that opens on selection. Recordings are not assigned lesson numbers; workshop order follows the array order. Add future recordings to the `workshopVideos` array in [app.js](app.js), supplying a unique ID, title, short description, topic, thumbnail title, ISO recording date, display date, and URL. The thumbnail is workshop artwork, not a frame from the recording.
 
 The current recording is hosted in Microsoft SharePoint and requires Microsoft sign-in and permission to view. Its sharing link redirects to a sign-in page that blocks iframe embedding, so the video preview opens SharePoint in a new tab instead of displaying a broken player. To enable inline playback, add an optional `embedUrl` containing the recording's SharePoint-provided embed URL and verify it using an authorized account. Keep `url` as the original sharing link for the **Open in SharePoint** fallback. No permissions are changed or bypassed by this site.
 
