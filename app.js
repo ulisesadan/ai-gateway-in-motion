@@ -116,6 +116,16 @@ const workshopVideos = [
     recorded: '2026-11-02',
     dateLabel: 'November 2, 2026',
     url: 'https://microsoft-my.sharepoint.com/:v:/r/personal/seadan_microsoft_com/_layouts/15/stream.aspx?id=%2Fpersonal%2Fseadan_microsoft_com%2FDocuments%2FRecordings%2FAI%20Gateway%20and%20Foundry%20Link-20261102_181428-Meeting%20Recording%2FExports%2FAI%20Gateway%20and%20Foundry%20Link-20261102_181428-Meeting%20Recording.mp4&share=cQpCpYZL3yaDSoEG_aQGq9oNEgUCSCrHhwUEYFQ5KRQCeQTIgg&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbE1vZGUiOiJtaXMiLCJyZWZlcnJhbFZpZXciOiJwb3N0cm9sbC1jb3B5bGluayIsInJlZmVycmFsUGxheWJhY2tTZXNzaW9uSWQiOiI1YTUyODdkNi1hZGFkLTRiNWYtYTAzZS0xZWZiOGNmY2EwYzgifX0%3D'
+  },
+  {
+    id: 'project-token-limits',
+    title: 'Set token limits per project',
+    topic: 'Project token limits',
+    thumbnailTitle: 'Project token limits',
+    description: 'Set project token limits in AI Foundry\'s linked AI Gateway.',
+    recorded: '2026-11-02',
+    dateLabel: 'November 2, 2026',
+    pendingMessage: 'Pending audio removal. This recording is not available yet.'
   }
 ];
 const main = document.querySelector('main');
@@ -352,7 +362,7 @@ function renderWorkshop() {
         <div class="workshop-player" id="workshop-player"></div>
         <h2 id="workshop-video-title"></h2>
         <div class="workshop-watch-meta"><span id="workshop-video-date"></span><a id="workshop-source" target="_blank" rel="noopener noreferrer">Open in SharePoint <span aria-hidden="true">↗</span></a></div>
-        <p class="workshop-access">Microsoft sign-in and permission to access the recording are required. If embedded playback is unavailable, open the recording in SharePoint.</p>
+        <p class="workshop-access" id="workshop-access"></p>
       </section>
       <section class="workshop-library" aria-labelledby="workshop-library-title">
         <div class="workshop-library-heading"><div><h2 id="workshop-library-title">Workshop recordings</h2><span id="workshop-results" role="status">${workshopVideos.length} videos</span></div><label class="workshop-order"><span>Order</span><select id="workshop-order" aria-label="Video order"><option value="workshop">Workshop order</option><option value="newest">Newest first</option><option value="title">Title A-Z</option></select></label></div>
@@ -372,25 +382,45 @@ function initializeWorkshop() {
   const cards = [...document.querySelectorAll('.workshop-video')];
   let selectedCard = null;
   const selectVideo = (video, focusPlayer) => {
+    const access = document.querySelector('#workshop-access');
     let player;
-    if (video.embedUrl) {
+    if (video.sourceUrl) {
+      player = document.createElement('video');
+      player.src = video.sourceUrl;
+      player.controls = true;
+      player.playsInline = true;
+      player.preload = 'metadata';
+      player.setAttribute('aria-label', video.title);
+      access.textContent = '';
+      player.addEventListener('error', () => {
+        access.textContent = 'The video could not be loaded. Its owner needs to check the video URL and viewing permissions.';
+      });
+    } else if (video.embedUrl) {
       player = document.createElement('iframe');
       player.src = video.embedUrl;
       player.title = video.title;
       player.allow = 'autoplay; fullscreen; picture-in-picture';
+      access.textContent = 'SharePoint recordings may require an existing Microsoft sign-in session and permission to view. Your browser and organization must allow embedded playback.';
     } else {
-      player = document.createElement('a');
-      player.className = 'workshop-player-link';
-      player.href = video.url;
-      player.target = '_blank';
-      player.rel = 'noopener noreferrer';
-      player.setAttribute('aria-label', `Watch ${video.title} in SharePoint (opens in a new tab)`);
-      player.innerHTML = '<img src="assets/azure-icons/API-Management-Services.svg" alt="" width="88" height="88"><span class="workshop-player-play">' + icons.play + '</span><span>Watch in SharePoint</span>';
+      player = document.createElement('div');
+      player.className = 'workshop-player-unavailable';
+      const artwork = document.createElement('img');
+      artwork.src = 'assets/azure-icons/API-Management-Services.svg';
+      artwork.alt = '';
+      artwork.width = 64;
+      artwork.height = 64;
+      const message = document.createElement('p');
+      message.textContent = video.pendingMessage || 'Inline playback is not available for this recording yet.';
+      player.append(artwork, message);
+      access.textContent = video.pendingMessage ? 'A verified audio-free copy is required before this recording can be published.' : 'The recording owner needs to provide a supported embed URL or a directly playable video file URL.';
     }
     document.querySelector('#workshop-player').replaceChildren(player);
     document.querySelector('#workshop-video-title').textContent = video.title;
     document.querySelector('#workshop-video-date').textContent = video.dateLabel;
-    document.querySelector('#workshop-source').href = video.url;
+    const sourceLink = document.querySelector('#workshop-source');
+    sourceLink.hidden = !video.url;
+    if (video.url) sourceLink.href = video.url;
+    else sourceLink.removeAttribute('href');
     watch.hidden = false;
     cards.forEach(card => card.setAttribute('aria-pressed', String(card.dataset.videoId === video.id)));
     if (focusPlayer) {

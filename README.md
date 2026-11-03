@@ -20,7 +20,14 @@ Each scene has a shareable hash URL, such as `index.html#semantic-caching`. The 
 
 Entry 12, [AI Gateway workshop](index.html#ai-gateway-workshop), uses a channel-style video library with thumbnail cards, search, ordering, and a viewing area that opens on selection. Recordings are not assigned lesson numbers; workshop order follows the array order. Add future recordings to the `workshopVideos` array in [app.js](app.js), supplying a unique ID, title, short description, topic, thumbnail title, ISO recording date, display date, and URL. The thumbnail is workshop artwork, not a frame from the recording.
 
-The current recording is hosted in Microsoft SharePoint and requires Microsoft sign-in and permission to view. Its sharing link redirects to a sign-in page that blocks iframe embedding, so the video preview opens SharePoint in a new tab instead of displaying a broken player. To enable inline playback, add an optional `embedUrl` containing the recording's SharePoint-provided embed URL and verify it using an authorized account. Keep `url` as the original sharing link for the **Open in SharePoint** fallback. No permissions are changed or bypassed by this site.
+The recordings currently use SharePoint viewing links, not playable video sources. Selecting a recording stays on this page and shows an availability message until an inline source is configured. The **Open in SharePoint** link is an optional manual fallback; it is not opened automatically.
+
+For inline playback, configure one of these fields on each recording:
+
+- `embedUrl`: open the recording in Stream/SharePoint, use **Share > Embed code** if available, and copy the iframe's `src` URL. Embedding does not grant access: viewers still need the required permissions and may need to sign in separately first. Organization policies and browser cookie restrictions can block embedded playback on an external site such as GitHub Pages.
+- `sourceUrl`: a stable, directly playable video URL (for example, an HTTPS MP4 URL or a relative path to an approved local MP4). This uses the browser's native video controls, inline playback, and fullscreen support. The server must serve the actual media, not a sign-in or sharing page. Public, no-sign-in playback requires a source accessible without authentication. Do not put credentials or private access tokens in this public site's source code.
+
+If both fields exist, `sourceUrl` takes precedence. Keep `url` as the original SharePoint link. Verify actual playback with the intended audience before publishing; the site cannot change or bypass SharePoint permissions. For recordings approved for public release, a public video host with supported embeds is another option.
 
 ## Publish On GitHub Pages
 
